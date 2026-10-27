@@ -794,6 +794,8 @@ main > .section:not(#prog-zone) { content-visibility: auto; contain-intrinsic-si
   .an-orbit { transform-origin: 130px 130px; animation: an-orbit 3.6s ease-in-out infinite; }
   @keyframes an-orbit { 0% { transform: rotate(30deg); } 75%, 100% { transform: rotate(-12deg); } }
 }
+/* Las ilustraciones solo se animan dentro de una pregunta (y al ampliarlas); en portada, catálogo y fichas quedan quietas */
+svg:not(.qimg svg, #modal svg) * { animation: none !important; }
 </style>
 <style>body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
 </head>
