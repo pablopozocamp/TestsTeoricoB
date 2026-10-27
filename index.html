@@ -993,6 +993,51 @@ svg:not(.qimg svg, #modal svg, #lightbox svg) * { animation: none !important; }
 .progress.segs i.bad { background: var(--bad); box-shadow: none; }
 .progress.segs i.cur { box-shadow: 0 0 0 1.5px var(--fg); }
 @media (prefers-reduced-motion: no-preference) { .progress.segs i { transition: background-color .25s; } }
+
+/* ===== v39: efecto cristal líquido (Liquid Glass) en las barras ===== */
+:root { --lg-tint: color-mix(in srgb, var(--surface) 58%, transparent); --lg-edge: rgba(255, 255, 255, .95); --lg-rim: rgba(255, 255, 255, .45); --lg-glow: rgba(255, 255, 255, .35); --lg-shade: rgba(15, 30, 60, .16); --lg-blur: blur(18px) saturate(1.9) brightness(1.04); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --lg-tint: color-mix(in srgb, var(--surface) 52%, transparent); --lg-edge: rgba(255, 255, 255, .28); --lg-rim: rgba(255, 255, 255, .10); --lg-glow: rgba(160, 190, 255, .10); --lg-shade: rgba(0, 0, 0, .45); --lg-blur: blur(18px) saturate(1.6) brightness(.92); } }
+:root[data-theme="dark"] { --lg-tint: color-mix(in srgb, var(--surface) 52%, transparent); --lg-edge: rgba(255, 255, 255, .28); --lg-rim: rgba(255, 255, 255, .10); --lg-glow: rgba(160, 190, 255, .10); --lg-shade: rgba(0, 0, 0, .45); --lg-blur: blur(18px) saturate(1.6) brightness(.92); }
+.lg-refract { --lg-blur-r: url(#lg-refract) blur(14px) saturate(1.9) brightness(1.04); }
+
+/* Cabecera: el cristal va en un pseudo-elemento para que la barra fija del móvil no quede atrapada dentro */
+.top { background: none !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; box-shadow: none; }
+.top::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 30%, transparent), transparent 60%), var(--lg-tint);
+  -webkit-backdrop-filter: var(--lg-blur); backdrop-filter: var(--lg-blur); box-shadow: inset 0 -1px 0 var(--lg-rim), inset 0 1px 0 var(--lg-glow), 0 8px 24px -14px var(--lg-shade); }
+.top { isolation: isolate; }
+.lg-refract .top::before { backdrop-filter: var(--lg-blur-r); }
+.top-nav a[aria-current="page"] { background: color-mix(in srgb, var(--accent) 14%, transparent); box-shadow: inset 1px 1px 0 var(--lg-edge), inset -1px -1px 0 var(--lg-rim), 0 2px 8px -3px var(--lg-shade); }
+.icon-btn { background: color-mix(in srgb, var(--surface) 45%, transparent); border-color: color-mix(in srgb, var(--line) 60%, transparent); box-shadow: inset 1px 1px 0 var(--lg-edge), inset -1px -1px 0 var(--lg-rim); }
+
+/* Pestañas de la portada: cápsula de cristal con la elegida como gota */
+.htabs { background: color-mix(in srgb, var(--surface) 70%, transparent); -webkit-backdrop-filter: var(--lg-blur); backdrop-filter: var(--lg-blur); border: 0; border-radius: 999px; padding: 5px;
+  box-shadow: inset 1.5px 1.5px 0 var(--lg-edge), inset -1px -1px 0 var(--lg-rim), inset 0 0 22px var(--lg-glow), 0 10px 30px -12px var(--lg-shade); }
+.lg-refract .htabs { backdrop-filter: var(--lg-blur-r); }
+.htabs button { border-radius: 999px; }
+.htabs button[aria-selected="true"] { background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 88%, #fff), var(--accent));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), inset 0 -2px 6px rgba(0, 0, 0, .12), 0 4px 12px -4px color-mix(in srgb, var(--accent) 60%, transparent); }
+
+@media (max-width: 720px) {
+  /* Barra inferior flotante de cristal, como en iOS */
+  .top-nav, body .top-nav { left: 12px; right: 12px; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); padding: 5px; border: 0 !important; border-radius: 30px;
+    background: var(--lg-tint) !important; -webkit-backdrop-filter: var(--lg-blur) !important; backdrop-filter: var(--lg-blur) !important;
+    box-shadow: inset 1.5px 1.5px 0 var(--lg-edge), inset -1px -1px 0 var(--lg-rim), inset 0 0 24px var(--lg-glow), 0 14px 34px -10px var(--lg-shade), 0 2px 6px -2px var(--lg-shade); }
+  .top-nav a { border-radius: 24px; padding: 7px 4px; min-width: 58px; }
+  .top-nav a[aria-current="page"] { color: var(--accent); }
+  .nav-badge { box-shadow: 0 0 0 2px color-mix(in srgb, var(--surface) 80%, transparent); }
+  main.wrap { padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px)); }
+  .toast { bottom: calc(92px + env(safe-area-inset-bottom, 0px)); }
+  /* Botones de la pregunta en una cápsula flotante */
+  body.inq .qfoot { left: 10px; right: 10px; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); padding: 8px; border: 0 !important; border-radius: 26px;
+    background: var(--lg-tint) !important; -webkit-backdrop-filter: var(--lg-blur) !important; backdrop-filter: var(--lg-blur) !important;
+    box-shadow: inset 1.5px 1.5px 0 var(--lg-edge), inset -1px -1px 0 var(--lg-rim), inset 0 0 24px var(--lg-glow), 0 14px 34px -10px var(--lg-shade); }
+  body.inq .qfoot .btn { border-radius: 18px; }
+  body.inq main.wrap { padding-bottom: calc(104px + env(safe-area-inset-bottom, 0px)); }
+}
+/* Quien pide menos transparencias en el sistema ve las barras opacas */
+@media (prefers-reduced-transparency: reduce) {
+  .top::before, .htabs, .top-nav, body .top-nav, body.inq .qfoot { background: var(--surface) !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+}
 </style>
 <style>body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
 </head>
@@ -1019,6 +1064,7 @@ svg:not(.qimg svg, #modal svg, #lightbox svg) * { animation: none !important; }
 </header>
 
 <main class="wrap" id="app"></main>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><filter id="lg-refract" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="0.006 0.018" numOctaves="2" seed="7" result="n"/><feGaussianBlur in="n" stdDeviation="2.5" result="nb"/><feDisplacementMap in="SourceGraphic" in2="nb" scale="22" xChannelSelector="R" yChannelSelector="G"/></filter></svg>
 <dialog class="modal" id="modal"><div class="modal-in" id="modal-in"></div></dialog>
 
 <footer class="foot">
@@ -2087,6 +2133,7 @@ let fails = new Set(store.get("fails", []));
 let seen = store.get("seen", {});          // id -> 1 acertada / 0 fallada (último intento)
 let history = store.get("history", []);    // {date, ok, n, pass, secs}
 let prefs = store.get("prefs", { autoNext: true });
+if (navigator.userAgentData && matchMedia("(hover: hover) and (pointer: fine)").matches) document.documentElement.classList.add("lg-refract");
 let EX = null, PR = null;                  // sesión de examen / práctica en curso
 let signFilter = "todas";
 let known = new Set(store.get("known", []));  // fichas marcadas como sabidas: "s:clave" o "q:id"
