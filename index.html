@@ -1038,6 +1038,45 @@ svg:not(.qimg svg, #modal svg, #lightbox svg) * { animation: none !important; }
 @media (prefers-reduced-transparency: reduce) {
   .top::before, .htabs, .top-nav, body .top-nav, body.inq .qfoot { background: var(--surface) !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
 }
+
+/* ===== v40: color principal a elegir, saludo según la hora y pantallas vacías con dibujo ===== */
+:root { --hb1: #1a4a9c; --hb2: #0f2f66; --hb3: #0b2150; --hglow: rgba(95, 160, 255, .38); --hglow2: rgba(64, 200, 190, .22); --stars: linear-gradient(transparent, transparent); }
+:root[data-accent="teal"] { --accent: #0f766e; --accent-soft: #d5f0ec; --hb1: #0f6b64; --hb2: #0a4a45; --hb3: #073532; --band: #0f6b64; --band-2: #0a4a45; --hglow: rgba(80, 220, 200, .35); }
+@media (prefers-color-scheme: dark) { :root[data-accent="teal"]:not([data-theme="light"]) { --accent: #4fd1c0; --accent-soft: #12322f; } }
+:root[data-accent="teal"][data-theme="dark"] { --accent: #4fd1c0; --accent-soft: #12322f; }
+:root[data-accent="morado"] { --accent: #6d3fc0; --accent-soft: #ece4fb; --hb1: #5a2fb0; --hb2: #3b1d7a; --hb3: #2a1459; --band: #5a2fb0; --band-2: #3b1d7a; --hglow: rgba(180, 140, 255, .38); }
+@media (prefers-color-scheme: dark) { :root[data-accent="morado"]:not([data-theme="light"]) { --accent: #b195f5; --accent-soft: #2a1f47; } }
+:root[data-accent="morado"][data-theme="dark"] { --accent: #b195f5; --accent-soft: #2a1f47; }
+:root[data-accent="naranja"] { --accent: #c2410c; --accent-soft: #fde6d8; --hb1: #b8460f; --hb2: #7c2d0b; --hb3: #561f08; --band: #b8460f; --band-2: #7c2d0b; --hglow: rgba(255, 170, 90, .38); }
+@media (prefers-color-scheme: dark) { :root[data-accent="naranja"]:not([data-theme="light"]) { --accent: #f59a62; --accent-soft: #3a2214; } }
+:root[data-accent="naranja"][data-theme="dark"] { --accent: #f59a62; --accent-soft: #3a2214; }
+:root[data-accent="rosa"] { --accent: #be185d; --accent-soft: #fbe0ec; --hb1: #a3164f; --hb2: #6b0f36; --hb3: #4a0a25; --band: #a3164f; --band-2: #6b0f36; --hglow: rgba(255, 130, 180, .36); }
+@media (prefers-color-scheme: dark) { :root[data-accent="rosa"]:not([data-theme="light"]) { --accent: #f37fb0; --accent-soft: #3a1527; } }
+:root[data-accent="rosa"][data-theme="dark"] { --accent: #f37fb0; --accent-soft: #3a1527; }
+.hero-band::before { background: var(--stars), radial-gradient(600px 380px at 78% 30%, var(--hglow), transparent 70%), radial-gradient(520px 340px at 12% 110%, var(--hglow2), transparent 70%), linear-gradient(160deg, var(--hb1) 0%, var(--hb2) 55%, var(--hb3) 100%); }
+.swatches { display: flex; gap: 10px; flex-wrap: wrap; margin: 8px 0 4px; }
+.swatches button { width: 40px; height: 40px; border-radius: 50%; border: 0; background: var(--sw); cursor: pointer; box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .35); display: grid; place-items: center; color: #fff; }
+.swatches button svg { width: 18px; height: 18px; opacity: 0; }
+.swatches button[aria-checked="true"] { box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--sw); }
+.swatches button[aria-checked="true"] svg { opacity: 1; }
+.swatches button:focus-visible { outline: 2px solid var(--fg); outline-offset: 4px; }
+.field-l { font-weight: 600; margin-top: 14px; display: block; }
+.sw-name { font-size: 13px; color: var(--muted); }
+
+/* Portada según la hora: más cálida por la mañana y más oscura y con estrellas por la noche */
+.hero-band[data-tod="dia"] { --hglow: rgba(255, 196, 120, .42); --hglow2: rgba(130, 210, 255, .26); }
+.hero-band[data-tod="noche"] { --hglow2: rgba(120, 110, 255, .22);
+  --stars: radial-gradient(1.6px 1.6px at 8% 22%, rgba(255,255,255,.9), transparent), radial-gradient(1.2px 1.2px at 22% 64%, rgba(255,255,255,.7), transparent), radial-gradient(1.8px 1.8px at 36% 14%, rgba(255,255,255,.85), transparent), radial-gradient(1.2px 1.2px at 47% 46%, rgba(255,255,255,.6), transparent), radial-gradient(1.6px 1.6px at 58% 80%, rgba(255,255,255,.75), transparent), radial-gradient(1.4px 1.4px at 66% 12%, rgba(255,255,255,.8), transparent), radial-gradient(1.2px 1.2px at 74% 58%, rgba(255,255,255,.6), transparent), radial-gradient(1.8px 1.8px at 86% 30%, rgba(255,255,255,.9), transparent), radial-gradient(1.2px 1.2px at 93% 74%, rgba(255,255,255,.65), transparent), radial-gradient(1.4px 1.4px at 14% 88%, rgba(255,255,255,.6), transparent); }
+.hero-band[data-tod="noche"]::before { filter: brightness(.74) saturate(1.1); }
+.hello { display: inline-flex; align-items: center; gap: 8px; }
+.hello svg { width: 16px; height: 16px; }
+
+/* Pantallas vacías con dibujo */
+.empty.art { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; padding: 26px 18px; }
+.empty.art svg { width: 150px; height: auto; }
+.empty.art p { margin: 0; max-width: 46ch; }
+.hero-band .btn-primary { color: var(--hb2); }
+.hero-band .btn-primary:hover:not(:disabled) { background: color-mix(in srgb, var(--hb1) 8%, #fff); }
 </style>
 <style>body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
 </head>
@@ -2200,6 +2239,13 @@ function go(r) { if (route() === r) render(); else location.hash = r; }
 
 /* ====================== Tema claro / oscuro ====================== */
 const mq = window.matchMedia("(prefers-color-scheme: dark)");
+const ACCENTS = [["azul", "Azul", "#1f4fa3"], ["teal", "Verde azulado", "#0f766e"], ["morado", "Morado", "#6d3fc0"], ["naranja", "Naranja", "#c2410c"], ["rosa", "Rosa", "#be185d"]];
+function applyAccent() {
+  const a = ACCENTS.find(x => x[0] === prefs.accent) || ACCENTS[0];
+  if (a[0] === "azul") delete document.documentElement.dataset.accent; else document.documentElement.dataset.accent = a[0];
+  const m = document.querySelector('meta[name="theme-color"][media*="light"]'); if (m) m.content = a[2];
+}
+applyAccent();
 const isDark = () => { const t = document.documentElement.dataset.theme; return t ? t === "dark" : mq.matches; };
 function paintToggle() { const b = $("#theme-toggle"); b.innerHTML = isDark() ? ICON.sun : ICON.moon; b.title = isDark() ? "Usar modo claro" : "Usar modo oscuro"; }
 const savedTheme = store.get("theme", null);
@@ -2224,14 +2270,37 @@ function gaugeSVG(p) {
   return `<svg viewBox="0 0 104 104" aria-hidden="true"><circle cx="52" cy="52" r="${r}" fill="none" stroke="var(--surface-2)" stroke-width="10"/>${p ? `<circle cx="52" cy="52" r="${r}" fill="none" stroke="${col}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${c * p / 100} ${c}" transform="rotate(-90 52 52)"/>` : ""}<text x="52" y="60" text-anchor="middle" font-family="Barlow Semi Condensed, Arial Narrow, sans-serif" font-weight="700" font-size="25" fill="var(--fg)">${p}%</text></svg>`;
 }
 
+// Mañana de 6 a 14, tarde de 14 a 21 y noche el resto
+const tod = () => { const h = new Date().getHours(); return h >= 6 && h < 14 ? { k: "dia", t: "Buenos días" } : h >= 14 && h < 21 ? { k: "tarde", t: "Buenas tardes" } : { k: "noche", t: "Buenas noches" }; };
+// Dibujos para las pantallas vacías (usan los colores del tema)
+const EART = (() => {
+  const st = (f, x = "") => `style="fill:${f}${x}"`, ln = (c, w) => `style="fill:none;stroke:${c};stroke-width:${w};stroke-linecap:round;stroke-linejoin:round"`;
+  const sh = `<ellipse cx="80" cy="100" rx="58" ry="7" ${st("var(--surface-2)")}/>`;
+  const wrap = i => `<svg viewBox="0 0 160 110" aria-hidden="true">${sh}${i}</svg>`;
+  return {
+    limpio: wrap(`<path d="M34 98 L62 36 h36 L126 98Z" ${st("color-mix(in srgb, var(--fg) 16%, var(--surface))")}/><path d="M80 42v8M80 58v10M80 78v12" ${ln("var(--surface)", 3)}/>
+      <rect x="66" y="66" width="28" height="22" rx="6" ${st("var(--accent)")}/><rect x="70" y="70" width="20" height="7" rx="2" ${st("var(--surface)", ";opacity:.7")}/>
+      <circle cx="120" cy="34" r="20" ${st("var(--ok)")}/><path d="M111 34l6 6 12-12" ${ln("#fff", 4)}/><path d="M28 30l4 4M32 30l-4 4M140 70l3 3M143 70l-3 3" ${ln("var(--warn)", 2)}/>`),
+    examen: wrap(`<rect x="44" y="18" width="62" height="80" rx="8" ${st("var(--surface)")}/><rect x="44" y="18" width="62" height="80" rx="8" ${ln("var(--line)", 2)}/>
+      <rect x="62" y="12" width="26" height="12" rx="4" ${st("var(--accent)")}/><path d="M56 42h30M56 54h38M56 66h24" ${ln("var(--line)", 4)}/>
+      <circle cx="108" cy="76" r="20" ${st("var(--accent-soft)")}/><circle cx="108" cy="76" r="20" ${ln("var(--accent)", 3)}/><path d="M108 66v10l7 5" ${ln("var(--accent)", 3)}/><path d="M104 52h8" ${ln("var(--accent)", 3)}/>`),
+    grafica: wrap(`<path d="M36 20v74h92" ${ln("var(--line)", 3)}/><path d="M42 84 L64 70 L84 76 L104 52 L124 40" ${ln("var(--accent)", 3)} stroke-dasharray="6 6"/>
+      <circle cx="64" cy="70" r="4" ${st("var(--accent)")}/><circle cx="104" cy="52" r="4" ${st("var(--accent)")}/><path d="M124 40V14" ${ln("var(--fg)", 2.5)}/><path d="M124 14h16l-4 6 4 6h-16" ${st("var(--ok)")}/>`),
+    lupa: wrap(`<circle cx="70" cy="50" r="28" ${st("var(--accent-soft)")}/><circle cx="70" cy="50" r="28" ${ln("var(--accent)", 6)}/><path d="M91 71l22 22" ${ln("var(--fg)", 9)}/>
+      <path d="M62 42a8 8 0 1 1 10 8c-2 1-2 3-2 5" ${ln("var(--accent)", 4)}/><circle cx="70" cy="63" r="2.6" ${st("var(--accent)")}/>`),
+    idea: wrap(`<path d="M80 16a26 26 0 0 0-15 47c3 2 5 6 5 10h20c0-4 2-8 5-10a26 26 0 0 0-15-47z" ${st("color-mix(in srgb, var(--warn) 30%, var(--surface))")}/><path d="M80 16a26 26 0 0 0-15 47c3 2 5 6 5 10h20c0-4 2-8 5-10a26 26 0 0 0-15-47z" ${ln("var(--warn)", 3)}/>
+      <rect x="70" y="76" width="20" height="10" rx="3" ${st("var(--muted)")}/><path d="M74 90h12" ${ln("var(--muted)", 3)}/><path d="M42 30l-8-4M118 30l8-4M38 54h-9M122 54h9" ${ln("var(--warn)", 3)}/>`),
+  };
+})();
+const emptyArt = (k, t) => `<div class="empty art">${EART[k]}<p>${t}</p></div>`;
 function home() {
   const total = Q.length, done = Object.keys(seen).length, right = Object.values(seen).filter(v => v).length;
   const rd = readiness();
   app.innerHTML = `
   ${EX && !EX.done ? `<div class="resume">${ICON.clock}<span><b>Tienes un examen en curso.</b> Te quedan ${fmt(EX.end - Date.now())} y ${plural(EX.qs.length - Object.keys(EX.ans).length, "pregunta", "preguntas")} por responder.</span><a class="btn btn-primary" href="#examen">Continuar examen</a></div>` : ""}
-  <section class="hero hero-band">
+  <section class="hero hero-band" data-tod="${tod().k}">
     <div>
-      <div class="eyebrow">Examen teórico · Permiso B</div>
+      <div class="eyebrow hello">${tod().k === "noche" ? ICON.moon : ICON.sun}<span>${tod().t}${who() ? `, ${esc(who().split(" ")[0])}` : ""}</span></div>
       <h1>Prepara el examen de la DGT con el mismo formato del día de la prueba</h1>
       <p class="lead">Exámenes simulados con cronómetro, práctica por temas con la explicación de cada respuesta y un repaso de tus fallos para no repetirlos.</p>
       <div class="btn-row">
@@ -2306,7 +2375,7 @@ function home() {
   </section>
   <section class="section">
     <div class="section-head"><h2>Últimos exámenes</h2><p>Se guardan solo en este navegador</p></div>
-    <div class="panel">${history.length ? `<table><thead><tr><th>Fecha</th><th>Tipo</th><th>Aciertos</th><th>Fallos</th><th>Tiempo</th><th>Resultado</th></tr></thead><tbody>${history.slice(0, 8).map(h => `<tr><td>${new Date(h.date).toLocaleString("es-ES", { dateStyle: "medium", timeStyle: "short" })}</td><td>${h.kind === "refuerzo" ? "Refuerzo" : h.kind === "real" ? "Realista" : "Simulado"}${h.diff && h.diff !== "normal" ? ` · ${DIFF[h.diff].n}` : ""}</td><td>${h.ok}/${h.n}</td><td>${h.n - h.ok}</td><td>${h.secs ? fmt(h.secs * 1000) : "—"}</td><td><span class="pill ${h.pass ? "pill-ok" : "pill-bad"}">${h.pass ? "APTO" : "NO APTO"}</span></td></tr>`).join("")}</tbody></table>` : `<div class="empty">Todavía no has hecho ningún examen. Cuando termines el primero, verás aquí tu resultado.</div>`}</div>
+    <div class="panel">${history.length ? `<table><thead><tr><th>Fecha</th><th>Tipo</th><th>Aciertos</th><th>Fallos</th><th>Tiempo</th><th>Resultado</th></tr></thead><tbody>${history.slice(0, 8).map(h => `<tr><td>${new Date(h.date).toLocaleString("es-ES", { dateStyle: "medium", timeStyle: "short" })}</td><td>${h.kind === "refuerzo" ? "Refuerzo" : h.kind === "real" ? "Realista" : "Simulado"}${h.diff && h.diff !== "normal" ? ` · ${DIFF[h.diff].n}` : ""}</td><td>${h.ok}/${h.n}</td><td>${h.n - h.ok}</td><td>${h.secs ? fmt(h.secs * 1000) : "—"}</td><td><span class="pill ${h.pass ? "pill-ok" : "pill-bad"}">${h.pass ? "APTO" : "NO APTO"}</span></td></tr>`).join("")}</tbody></table>` : `${emptyArt("examen", `Todavía no has hecho ningún examen. Cuando termines el primero, verás aquí tu resultado.`)}`}</div>
   </section>
   </div>
   <div class="hpane" id="hpane-logros" role="tabpanel" aria-labelledby="htab-logros" ${hTab() === "logros" ? "" : "hidden"}>
@@ -2511,7 +2580,7 @@ function chanceData() {
 }
 function chanceHTML() {
   const d = chanceData();
-  if (!d) return `<div class="panel"><div class="empty">Haz un examen o responde al menos 40 preguntas en la práctica para calcular tu probabilidad de aprobar.</div></div>`;
+  if (!d) return `<div class="panel">${emptyArt("grafica", `Haz un examen o responde al menos 40 preguntas en la práctica para calcular tu probabilidad de aprobar.`)}</div>`;
   const pct = Math.round(d.p * 100), acc = Math.round(d.acc * 100);
   const tier = pct >= 85 ? ["ok", "Muy probable"] : pct >= 60 ? ["ok", "Bastante probable"] : pct >= 30 ? ["mid", "Vas por buen camino"] : ["low", "Todavía te falta"];
   const need = [.85, .9, .93, .95, .97].map(a => [a, Math.round(passProbAt(a) * 100)]);
@@ -2598,7 +2667,7 @@ function todayPlanHTML() {
 
 /* ---------- Gráficas de progreso ---------- */
 function progressHTML() {
-  if (!history.length && !Object.keys(daily).length) return `<div class="panel"><div class="empty">Cuando hagas tu primer examen, aquí verás cómo evolucionan tus notas.</div></div>`;
+  if (!history.length && !Object.keys(daily).length) return `<div class="panel">${emptyArt("grafica", `Cuando hagas tu primer examen, aquí verás cómo evolucionan tus notas.`)}</div>`;
   const h = history.slice().reverse(), sc = x => x.ok / x.n * 30;
   const avg = a => a.length ? a.reduce((s, x) => s + sc(x), 0) / a.length : 0;
   const first = avg(h.slice(0, 5)), last = avg(h.slice(-5)), diff = Math.round((last - first) * 10) / 10;
@@ -2772,7 +2841,7 @@ function typeStats() {
 }
 function typesHTML() {
   const st = typeStats(), any = st.some(t => t.tried >= 8);
-  if (!any) return `<div class="panel"><div class="empty">Responde unas cuantas preguntas más y te diremos qué tipo de pregunta te cuesta más: cifras, excepciones, preguntas en negativo o señales.</div></div>`;
+  if (!any) return `<div class="panel">${emptyArt("idea", `Responde unas cuantas preguntas más y te diremos qué tipo de pregunta te cuesta más: cifras, excepciones, preguntas en negativo o señales.`)}</div>`;
   return `<div class="qtypes">${st.map(t => { const p = t.tried ? Math.round((1 - t.rate) * 100) : 0; return `<article class="card ${t.weak ? "high" : ""}">
     <div><h3>${t.n}${t.weak ? ` <span class="pill-weak">Tu punto débil</span>` : ""}</h3><div class="stat">${t.tried >= 8 ? `Aciertas el ${p} % · ${plural(t.bad, "fallo", "fallos")} de ${t.tried}` : `${t.tried} de ${t.qs.length} vistas, aún pocas para saberlo`}</div>
     <div class="meter"><i class="${pctClass(p)}" style="width:${t.tried >= 8 ? p : 0}%"></i></div></div>
@@ -2792,7 +2861,7 @@ function confusionStats() {
   }).filter(c => c.bad > 0).sort((a, b) => b.rate - a.rate || b.bad - a.bad);
 }
 function confusionsHTML(list) {
-  if (!list.length) return `<div class="panel"><div class="empty">Todavía no hemos detectado confusiones. Cuando falles preguntas de un mismo concepto, aparecerán aquí con la clave para no volver a fallarlas.</div></div>`;
+  if (!list.length) return `<div class="panel">${emptyArt("idea", `Todavía no hemos detectado confusiones. Cuando falles preguntas de un mismo concepto, aparecerán aquí con la clave para no volver a fallarlas.`)}</div>`;
   return `<div class="conf">${list.map(c => `<article class="card ${c.rate >= .5 ? "high" : ""}">
     <div><h3>${c.n}</h3><div class="stat">Fallas ${c.bad} de ${c.tried} ${c.tried === 1 ? "pregunta respondida" : "preguntas respondidas"} · ${Math.round(c.rate * 100)} %</div></div>
     <div class="key"><b>Clave para no confundirte</b>${c.key}</div>
@@ -2941,7 +3010,7 @@ function failsView() {
   <section style="margin-bottom:32px"><div class="section-head"><h2>Tus puntos débiles</h2><p>Qué tipo de pregunta te cuesta más, sea del tema que sea</p></div>${typesHTML()}</section>
   <section style="margin-bottom:32px"><div class="section-head"><h2>Tus confusiones</h2><p>Conceptos en los que más fallas, con la clave para distinguirlos</p></div>${confusionsHTML(confusionStats())}</section>
   <div class="section-head"><h2>Preguntas falladas</h2></div>
-  <div class="review">${list.length ? list.map((q, i) => `<div class="rv bad"><span class="n">${i + 1}</span><div><p class="q">${esc(q.q)}</p><p class="a">Respuesta correcta: <em>${L[q.a]}. ${esc(q.o[q.a])}</em></p><p class="a">${esc(q.e)}</p></div>${q.img ? `<span class="thumb">${imgHTML(q.img)}</span>` : "<span></span>"}</div>`).join("") : `<div class="panel"><div class="empty">No tienes fallos pendientes. Haz un examen o practica un tema para empezar.</div></div>`}</div>
+  <div class="review">${list.length ? list.map((q, i) => `<div class="rv bad"><span class="n">${i + 1}</span><div><p class="q">${esc(q.q)}</p><p class="a">Respuesta correcta: <em>${L[q.a]}. ${esc(q.o[q.a])}</em></p><p class="a">${esc(q.e)}</p></div>${q.img ? `<span class="thumb">${imgHTML(q.img)}</span>` : "<span></span>"}</div>`).join("") : `<div class="panel">${emptyArt("limpio", `No tienes fallos pendientes. Haz un examen o practica un tema para empezar.`)}</div>`}</div>
   <div style="margin-top:32px;display:flex;gap:10px;align-items:center;flex-wrap:wrap" id="reset-zone"><button class="btn btn-ghost btn-danger" id="reset">Borrar todo mi progreso</button></div>`;
   const b = $("#practice-fails"); if (b) b.onclick = () => startPractice(shuffle(list), "Repaso de fallos");
   bindConfusions(); bindTypes();
@@ -3336,7 +3405,7 @@ function drawResults() {
   const ch = CHEAT.flatMap(c => c.rows.map(r => [c.h, ...r])).filter(r => matches(r.join(" "), toks));
   const qs = Q.filter(q => matches(q.q + " " + q.o[q.a] + " " + q.e, toks));
   const LIM = 40;
-  if (!sg.length && !ch.length && !qs.length) { box.innerHTML = `<div class="panel res-sec"><div class="empty">No hay resultados para «${esc(searchQ)}». Prueba con otra palabra o con menos palabras.</div></div>`; return; }
+  if (!sg.length && !ch.length && !qs.length) { box.innerHTML = `<div class="panel res-sec">${emptyArt("lupa", `No hay resultados para «${esc(searchQ)}». Prueba con otra palabra o con menos palabras.`)}</div>`; return; }
   box.innerHTML = `
   ${qs.length ? `<section class="res-sec"><div class="section-head"><h2>${plural(qs.length, "pregunta", "preguntas")}</h2><button class="btn btn-primary" id="search-practice">Practicar ${plural(qs.length, "pregunta", "preguntas")}</button></div>
     <div class="review">${qs.slice(0, LIM).map((q, i) => `<div class="rv ok"><span class="n">${i + 1}</span><div><p class="q">${hl(q.q, toks)}</p><p class="a">Correcta: <em>${hl(q.o[q.a], toks)}</em></p><p class="a">${hl(q.e, toks)}</p></div>${q.img ? `<span class="thumb">${imgHTML(q.img)}</span>` : "<span></span>"}</div>`).join("")}</div>
@@ -3400,9 +3469,16 @@ const who = () => (prefs.name || "").trim();
 function paintProfile() { const b = $("#profile-btn"); b.innerHTML = ICON.user + (who() ? `<span>${esc(who())}</span>` : ""); b.title = who() ? `Alumno: ${who()}` : "Poner tu nombre"; }
 $("#profile-btn").onclick = () => {
   openModal("Perfil del alumno", `<label class="field" for="p-name">Tu nombre<input id="p-name" maxlength="40" autocomplete="name" value="${esc(who())}" placeholder="Por ejemplo: Laura Pérez"><small>Aparece en la cabecera y en tus resultados, para enseñárselos a tu profesor. Se guarda solo en este navegador.</small></label>
+    <span class="field-l" id="sw-l">Color de la web <span class="sw-name" id="sw-name">· ${(ACCENTS.find(x => x[0] === (prefs.accent || "azul")) || ACCENTS[0])[1]}</span></span>
+    <div class="swatches" role="radiogroup" aria-labelledby="sw-l">${ACCENTS.map(([k, n, c]) => `<button role="radio" aria-checked="${(prefs.accent || "azul") === k}" aria-label="${n}" title="${n}" data-acc="${k}" style="--sw:${c}">${ICON.check2}</button>`).join("")}</div>
     ${"vibrate" in navigator ? `<label class="opt-toggle" for="p-vibe"><input type="checkbox" id="p-vibe" ${prefs.vibe !== false ? "checked" : ""}><span><b>Vibrar al responder</b><small>Un toque al acertar y dos al fallar en la práctica.</small></span></label>` : ""}
     <div class="btn-row"><button class="btn btn-primary" id="p-save">Guardar</button>${who() ? `<button class="btn btn-ghost" id="p-del">Quitar nombre</button>` : ""}</div>`);
   const inp = $("#p-name"); inp.focus();
+  document.querySelectorAll("[data-acc]").forEach(b => b.onclick = () => {
+    prefs.accent = b.dataset.acc; store.set("prefs", prefs); applyAccent();
+    document.querySelectorAll("[data-acc]").forEach(x => x.setAttribute("aria-checked", x === b));
+    $("#sw-name").textContent = "· " + b.title;
+  });
   const vb = $("#p-vibe"); if (vb) vb.onchange = () => { prefs.vibe = vb.checked; store.set("prefs", prefs); if (vb.checked) buzz(true); };
   const save = v => { prefs.name = v; store.set("prefs", prefs); paintProfile(); modal.close(); render(); };
   $("#p-save").onclick = () => save(inp.value.trim());
@@ -3473,7 +3549,7 @@ function levelHTML() {
     const qs = Q.filter(q => q.t === k && seen[q.id] !== undefined), ok = qs.filter(q => seen[q.id] === 1).length;
     return { k, n: t.n, tried: qs.length, p: qs.length ? Math.round(ok / qs.length * 100) : 0 };
   }).filter(r => r.tried >= 5);
-  if (!rows.length) return `<div class="panel"><div class="empty">Responde al menos 5 preguntas de un tema para ver tu nivel en él.</div></div>`;
+  if (!rows.length) return `<div class="panel">${emptyArt("grafica", `Responde al menos 5 preguntas de un tema para ver tu nivel en él.`)}</div>`;
   return `<div class="panel"><div class="lvl">${rows.map(r => `<div class="lvl-row"><b>${tdot(r.k)}${r.n}</b>
     <div class="lvl-bar" role="img" aria-label="${r.p} % de aciertos"><i class="${r.p >= 90 ? "ok" : r.p >= 70 ? "mid" : ""}" style="width:${r.p}%"></i><em></em></div>
     <span><b>${r.p} %</b> · ${r.p >= 90 ? "nivel de aprobado" : `${90 - r.p} % por debajo`}</span></div>`).join("")}</div>
