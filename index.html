@@ -899,6 +899,49 @@ svg:not(.qimg svg, #modal svg, #lightbox svg) * { animation: none !important; }
 .pill-weak { font: 700 12px var(--font-body); letter-spacing: .04em; text-transform: uppercase; color: var(--bad); background: var(--bad-soft); padding: 3px 8px; border-radius: 999px; }
 @media (max-width: 720px) { .qtypes { grid-template-columns: 1fr; } }
 #share-res svg { width: 18px; height: 18px; margin-right: 6px; vertical-align: -3px; }
+
+/* ---------- v36: siguiente paso, calendario, reloj y medallas ---------- */
+#next-zone:empty { display: none; }
+.next-card { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 18px; align-items: center; margin: 18px 0 4px; padding: 18px 22px; background: var(--surface); border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line)); border-left: 6px solid var(--accent); border-radius: 14px; box-shadow: var(--shadow); }
+.next-card.done { border-left-color: var(--ok); border-color: color-mix(in srgb, var(--ok) 40%, var(--line)); }
+.next-ic .pic64 { width: 64px; height: 64px; padding: 6px; border-radius: 16px; background: var(--accent-soft); }
+.next-card.done .next-ic { width: 64px; height: 64px; border-radius: 50%; background: var(--ok); color: var(--surface); display: grid; place-items: center; }
+.next-card.done .next-ic svg { width: 34px; height: 34px; }
+.next-tx h2 { font-size: 24px; margin: 2px 0 0; }
+.next-tx p { margin: 4px 0 0; color: var(--muted); }
+.next-meter { display: flex; align-items: center; gap: 10px; margin-top: 10px; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.next-meter .meter { flex: 1; max-width: 280px; margin: 0; }
+@media (max-width: 720px) { .next-card { grid-template-columns: auto minmax(0, 1fr); padding: 16px; gap: 14px; } .next-card > .btn { grid-column: 1 / -1; } .next-tx h2 { font-size: 20px; } .next-ic .pic64, .next-card.done .next-ic { width: 52px; height: 52px; } }
+.cal-head { display: flex; justify-content: space-between; gap: 16px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 14px; }
+.cal-head h2 { font-size: 22px; }
+.cal-head p { margin: 4px 0 0; }
+.cal-key { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--muted); }
+.cal i { display: block; width: 100%; aspect-ratio: 1; border-radius: 3px; background: var(--surface-2); }
+.cal-key i { width: 12px; }
+.cal .l1 { background: color-mix(in srgb, var(--accent) 25%, var(--surface-2)); }
+.cal .l2 { background: color-mix(in srgb, var(--accent) 50%, var(--surface-2)); }
+.cal .l3 { background: color-mix(in srgb, var(--accent) 78%, var(--surface-2)); }
+.cal .l4 { background: var(--accent); }
+.cal .fut { background: transparent; }
+.cal .today { outline: 2px solid var(--fg); outline-offset: 1px; }
+.cal { padding: 18px 20px; }
+.cal-grid { max-width: 760px; }
+.cal-cells b { font-size: 10px; font-weight: 600; color: var(--muted); display: grid; align-items: center; }
+.cal-months, .cal-cells { display: grid; grid-template-columns: 14px repeat(var(--w), minmax(0, 1fr)); gap: 3px; }
+.cal-months { height: 16px; font-size: 11px; color: var(--muted); }
+.cal-months span { white-space: nowrap; overflow: visible; text-transform: capitalize; }
+.cal-cells { grid-template-rows: repeat(7, auto); grid-auto-flow: column; }
+@media (max-width: 720px) { .cal { padding: 14px; } }
+.timer { display: inline-flex; align-items: center; gap: 8px; }
+.timer .ring { width: 26px; height: 26px; transform: rotate(-90deg); flex: none; }
+.timer .ring circle { fill: none; stroke-width: 4; }
+.timer .ring .rb { stroke: var(--surface-2); }
+.timer .ring .rf { stroke: var(--accent); stroke-linecap: round; transition: stroke-dashoffset .5s linear, stroke .3s; }
+.timer.low { color: var(--warn); border-color: var(--warn); }
+.timer.low .ring .rf { stroke: var(--warn); }
+.timer.crit { color: var(--bad); border-color: var(--bad); }
+.timer.crit .ring .rf { stroke: var(--bad); }
+@media (prefers-reduced-motion: no-preference) { .timer.crit { animation: crit 1s ease-in-out infinite; } @keyframes crit { 50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--bad) 25%, transparent); } } }
 </style>
 <style>body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
 </head>
@@ -2081,6 +2124,7 @@ function home() {
   const rd = readiness();
   app.innerHTML = `
   ${EX && !EX.done ? `<div class="resume">${ICON.clock}<span><b>Tienes un examen en curso.</b> Te quedan ${fmt(EX.end - Date.now())} y ${plural(EX.qs.length - Object.keys(EX.ans).length, "pregunta", "preguntas")} por responder.</span><a class="btn btn-primary" href="#examen">Continuar examen</a></div>` : ""}
+  <div id="next-zone"></div>
   <section class="hero hero-band">
     <div>
       <div class="eyebrow">Examen teórico · Permiso B</div>
@@ -2112,6 +2156,7 @@ function home() {
     ${chanceHTML()}
   </section>
   <section class="section" id="streak-zone" style="padding-top:16px">${streakHTML()}</section>
+  <section class="section" style="padding-top:16px">${calendarHTML()}</section>
   ${(() => { const c = confusionStats().find(x => x.bad >= 2); return c ? `<div class="callout"><span>Parece que confundes <b>${c.n.toLowerCase()}</b>: has fallado ${c.bad} de ${c.tried}.</span><a class="btn" href="#fallos">Ver la clave</a></div>` : ""; })()}
   ${(() => { const w = typeStats().filter(t => t.weak).sort((a, b) => b.rate - a.rate)[0]; return w ? `<div class="callout"><span>Tu punto débil son las preguntas de <b>${w.n.toLowerCase()}</b>: aciertas el ${Math.round((1 - w.rate) * 100)} %.</span><button class="btn" data-qtype="${w.id}">Repasar 15</button></div>` : ""; })()}
 
@@ -2148,7 +2193,7 @@ function home() {
 
   <section class="section">
     <div class="section-head"><h2>Logros</h2><p>${plural(BADGES.filter(b => earned[b.id]).length, "conseguido", "conseguidos")} de ${BADGES.length}</p></div>
-    <div class="badges">${BADGES.map(b => { const on = !!earned[b.id], pr = !on && b.p ? b.p() : ""; return `<div class="badge ${on ? "on" : "off"}" title="${on ? "Conseguido el " + new Date(earned[b.id]).toLocaleDateString("es-ES") : "Pendiente"}">${medal(b.c)}<div><b>${b.n}</b><small>${on ? "Conseguido" : b.d}${pr ? ` · ${pr}` : ""}</small></div></div>`; }).join("")}</div>
+    <div class="badges">${BADGES.map(b => { const on = !!earned[b.id], pr = !on && b.p ? b.p() : ""; return `<div class="badge ${on ? "on" : "off"}" title="${on ? "Conseguido el " + new Date(earned[b.id]).toLocaleDateString("es-ES") : "Pendiente"}">${badgeArt(b)}<div><b>${b.n}</b><small>${on ? "Conseguido" : b.d}${pr ? ` · ${pr}` : ""}</small></div></div>`; }).join("")}</div>
   </section>
 
   <section class="section" id="prog-zone">
@@ -2162,7 +2207,7 @@ function home() {
   </section>
   ${aboutNote()}`;
   $("#start-mix").onclick = () => startPractice(shuffle(Q).slice(0, 10), "Práctica rápida");
-  bindPlan(); bindStreak(); drawCharts(); bindTypes();
+  bindPlan(); bindStreak(); drawCharts(); bindTypes(); paintNext();
   const gn = $("#go-night"); if (gn) gn.onclick = () => startPractice(shuffle(todayFails()).slice(0, 10), "Repaso antes de dormir");
   document.querySelectorAll("[data-topic]").forEach(b => b.onclick = () => startPractice(shuffle(Q.filter(q => q.t === b.dataset.topic)), TEMAS[b.dataset.topic].n));
 }
@@ -2192,6 +2237,30 @@ function streakHTML() {
       <div class="meter"><i class="${met ? "" : "mid"}" style="width:${Math.min(100, today / g * 100)}%"></i></div>
       <div class="goal" role="group" aria-label="Objetivo diario">Objetivo diario: ${GOALS.map(x => `<button data-goal="${x}" aria-pressed="${x === g}">${x}</button>`).join("")}</div></div>
     <div class="week" aria-label="Últimos 7 días">${week}</div>
+  </div>`;
+}
+// Un cuadrado por día; el tono depende de cuánto se acercó al objetivo diario
+function calendarHTML() {
+  const g = goal(), weeks = innerWidth < 520 ? 18 : 26, today = new Date(); today.setHours(0, 0, 0, 0);
+  const start = new Date(today); start.setDate(start.getDate() - ((start.getDay() + 6) % 7) - (weeks - 1) * 7);
+  const lvl = c => !c ? 0 : c < g / 2 ? 1 : c < g ? 2 : c < g * 2 ? 3 : 4;
+  let cells = "", months = "", lastM = -1, lastW = -9, active = 0, total = 0;
+  for (let w = 0; w < weeks; w++) {
+    const d0 = new Date(start); d0.setDate(d0.getDate() + w * 7);
+    const nm = d0.getMonth() !== lastM && w - lastW >= 3;
+    months += `<span>${nm ? d0.toLocaleDateString("es-ES", { month: "short" }).replace(".", "") : ""}</span>`;
+    if (d0.getMonth() !== lastM) { lastM = d0.getMonth(); if (nm) lastW = w; }
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(d0); d.setDate(d.getDate() + i);
+      if (d > today) { cells += `<i class="fut"></i>`; continue; }
+      const c = daily[dayKey(d)] || 0; if (c) { active++; total += c; }
+      cells += `<i class="l${lvl(c)}${+d === +today ? " today" : ""}" title="${d.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" })}: ${c ? plural(c, "respuesta", "respuestas") : "sin estudiar"}"></i>`;
+    }
+  }
+  return `<div class="cal panel">
+    <div class="cal-head"><div><h2>Calendario de estudio</h2><p class="muted">${active ? `Has estudiado ${plural(active, "día", "días")} en los últimos ${weeks * 7 > 150 ? "6 meses" : "4 meses"}, con ${total} respuestas en total.` : "Cada día que estudies se pintará un cuadrado. Cuanto más oscuro, más cerca de tu objetivo diario."}</p></div>
+      <div class="cal-key" aria-hidden="true">Menos ${[0, 1, 2, 3, 4].map(l => `<i class="l${l}"></i>`).join("")} Más</div></div>
+    <div class="cal-grid" style="--w:${weeks}"><div class="cal-months" aria-hidden="true"><span></span>${months}</div><div class="cal-cells" role="img" aria-label="Días estudiados en las últimas ${weeks} semanas: ${active}">${["L", "", "X", "", "V", "", "D"].map(x => `<b aria-hidden="true">${x}</b>`).join("")}${cells}</div></div>
   </div>`;
 }
 function bindStreak() {
@@ -2256,6 +2325,21 @@ function planHTML() {
       </div>
     </div>
   </div>`;
+}
+// La primera tarea pendiente del plan de hoy, en grande y arriba del todo
+function paintNext() {
+  const z = $("#next-zone"); if (!z) return;
+  const t = TASKS.find(x => x.done < x.target), all = TASKS.length && !t;
+  if (!TASKS.length) { z.innerHTML = ""; return; }
+  z.innerHTML = `<div class="next-card ${all ? "done" : ""}">
+    <div class="next-ic">${all ? ICON.check2 : PIC[t.id === "exam" ? "examen" : t.id === "fails" ? "fallos" : t.id === "cheat" ? "chuleta" : t.id === "guide" ? "guia" : "fichas"]}</div>
+    <div class="next-tx"><div class="eyebrow">${all ? "Plan de hoy cumplido" : "Tu siguiente paso"}</div>
+      <h2>${all ? "Buen trabajo, hoy ya has hecho todo el plan" : t.title}</h2>
+      <p>${all ? "Si te apetece seguir, haz un examen extra o repasa tus puntos débiles en Mis fallos." : t.sub}</p>
+      ${!all && t.target > 1 ? `<div class="next-meter"><div class="meter"><i style="width:${t.done / t.target * 100}%"></i></div><span>${t.done} de ${t.target}</span></div>` : ""}</div>
+    ${all ? `<a class="btn" href="#examen">Examen extra</a>` : `<button class="btn btn-primary" id="next-go">${t.btn}</button>`}
+  </div>`;
+  const b = $("#next-go"); if (b) b.onclick = () => t.go();
 }
 function bindPlan() {
   const inp = $("#exam-date");
@@ -2780,11 +2864,14 @@ function startPractice(qs, title) {
 }
 const cur = () => route() === "examen" ? EX : route() === "practica" ? PR : null;
 
+const RING_C = 97.39;
+const ringOff = left => (RING_C * (1 - Math.max(0, left) / (EXAM_MIN * 60000))).toFixed(2);
+const timerCls = left => left < 60000 ? "crit" : left < 5 * 60000 ? "low" : "";
 setInterval(() => {
   if (!EX || EX.done) return;
   const left = EX.end - Date.now();
   const el = $("#timer-val");
-  if (el) { el.textContent = fmt(left); $("#timer").classList.toggle("low", left < 5 * 60000); }
+  if (el) { el.textContent = fmt(left); $("#timer").className = "timer " + timerCls(left); const r = $("#timer-ring"); if (r) r.setAttribute("stroke-dashoffset", ringOff(left)); }
   if (left <= 0) finishExam();
 }, 500);
 
@@ -2808,7 +2895,7 @@ function renderQ(S) {
     <div><div class="eyebrow">${S.done ? "Revisión" : isExam ? "Examen · Permiso B" : "Práctica"}${who() ? ` · ${esc(who())}` : ""}</div><h2>${esc(S.title)}</h2></div>
     <div class="right">
       <span class="counter">${answered}/${S.qs.length} respondidas</span>
-      ${isExam && !S.done ? `<div class="timer" id="timer" aria-label="Tiempo restante">${ICON.clock}<span id="timer-val">${fmt(S.end - Date.now())}</span></div>` : ""}
+      ${isExam && !S.done ? `<div class="timer ${timerCls(S.end - Date.now())}" id="timer" aria-label="Tiempo restante"><svg class="ring" viewBox="0 0 36 36" aria-hidden="true"><circle class="rb" cx="18" cy="18" r="15.5"/><circle class="rf" id="timer-ring" cx="18" cy="18" r="15.5" stroke-dasharray="${RING_C}" stroke-dashoffset="${ringOff(S.end - Date.now())}"/></svg><span id="timer-val">${fmt(S.end - Date.now())}</span></div>` : ""}
     </div>
   </div>
   <div class="progress"><i style="width:${answered / S.qs.length * 100}%"></i></div>
@@ -2876,10 +2963,12 @@ function renderQ(S) {
 function move(S, d) { const j = S.i + d; if (j < 0 || j >= S.qs.length) return; S.i = j; renderQ(S); if (matchMedia("(max-width: 720px)").matches) window.scrollTo(0, 0); }
 function toggleFlag(S) { S.flags.has(S.i) ? S.flags.delete(S.i) : S.flags.add(S.i); renderQ(S); }
 
+// Vibración corta al acertar y doble al fallar (solo navegadores que la permiten, como Chrome en Android)
+const buzz = ok => { try { if (prefs.vibe !== false && navigator.vibrate) navigator.vibrate(ok ? 25 : [45, 70, 45]); } catch (e) {} };
 function choose(S, k) {
   const q = S.qs[S.i];
   S.ans[S.i] = k;
-  if (S.mode === "practice") { if (!q.syn) record(q, k === q.a); S.justAnswered = S.i; renderQ(S); return; }
+  if (S.mode === "practice") { if (!q.syn) record(q, k === q.a); buzz(k === q.a); S.justAnswered = S.i; renderQ(S); return; }
   renderQ(S);
   if (!prefs.autoNext || S.kind === "real") return;
   const from = S.i;
@@ -3166,8 +3255,10 @@ const who = () => (prefs.name || "").trim();
 function paintProfile() { const b = $("#profile-btn"); b.innerHTML = ICON.user + (who() ? `<span>${esc(who())}</span>` : ""); b.title = who() ? `Alumno: ${who()}` : "Poner tu nombre"; }
 $("#profile-btn").onclick = () => {
   openModal("Perfil del alumno", `<label class="field" for="p-name">Tu nombre<input id="p-name" maxlength="40" autocomplete="name" value="${esc(who())}" placeholder="Por ejemplo: Laura Pérez"><small>Aparece en la cabecera y en tus resultados, para enseñárselos a tu profesor. Se guarda solo en este navegador.</small></label>
+    ${"vibrate" in navigator ? `<label class="opt-toggle" for="p-vibe"><input type="checkbox" id="p-vibe" ${prefs.vibe !== false ? "checked" : ""}><span><b>Vibrar al responder</b><small>Un toque al acertar y dos al fallar en la práctica.</small></span></label>` : ""}
     <div class="btn-row"><button class="btn btn-primary" id="p-save">Guardar</button>${who() ? `<button class="btn btn-ghost" id="p-del">Quitar nombre</button>` : ""}</div>`);
   const inp = $("#p-name"); inp.focus();
+  const vb = $("#p-vibe"); if (vb) vb.onchange = () => { prefs.vibe = vb.checked; store.set("prefs", prefs); if (vb.checked) buzz(true); };
   const save = v => { prefs.name = v; store.set("prefs", prefs); paintProfile(); modal.close(); render(); };
   $("#p-save").onclick = () => save(inp.value.trim());
   inp.onkeydown = e => { if (e.key === "Enter") save(inp.value.trim()); };
@@ -3243,6 +3334,22 @@ function levelHTML() {
     <span><b>${r.p} %</b> · ${r.p >= 90 ? "nivel de aprobado" : `${90 - r.p} % por debajo`}</span></div>`).join("")}</div>
     <div class="lvl-key"><i></i>Línea del 90 %, el mínimo para aprobar (27 de 30). Se calcula con tu último intento de cada pregunta.</div></div>`;
 }
+// Cada logro con su propio dibujo dentro de la medalla
+const BADGE_GLYPH = {
+  exam1: `<rect x="17.5" y="21" width="13" height="16" rx="2" fill="#fff"/><rect x="21" y="19" width="6" height="4" rx="1.5" fill="#fff" stroke="C" stroke-width="1.2"/><path d="M20.5 29.5l2.3 2.3 4.5-4.6" fill="none" stroke="C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`,
+  apto1: `<path d="M18 20h12v4a6 6 0 0 1-12 0z" fill="#fff"/><path d="M18 21.5h-3a3 3 0 0 0 3.5 4M30 21.5h3a3 3 0 0 1-3.5 4" fill="none" stroke="#fff" stroke-width="1.6"/><rect x="22.6" y="29.5" width="2.8" height="4" fill="#fff"/><rect x="19.5" y="33.5" width="9" height="3" rx="1" fill="#fff"/>`,
+  apto3: [17, 24, 31].map((x, i) => `<path d="M${x} ${i === 1 ? 22 : 26}l1.6 3.3 3.6.5-2.6 2.5.6 3.6-3.2-1.7-3.2 1.7.6-3.6-2.6-2.5 3.6-.5z" fill="#fff"/>`).join(""),
+  perfect: `<path d="M24 19.5l2.9 5.9 6.5.9-4.7 4.6 1.1 6.4L24 34.3l-5.8 3 1.1-6.4-4.7-4.6 6.5-.9z" fill="#fff"/><text x="24" y="32" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="6.5" fill="C">30</text>`,
+  real: `<circle cx="24" cy="29" r="8.5" fill="none" stroke="#fff" stroke-width="2"/><circle cx="24" cy="29" r="4.5" fill="none" stroke="#fff" stroke-width="2"/><circle cx="24" cy="29" r="1.6" fill="#fff"/><path d="M24 29l7-7M29 21.5h2.5V24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>`,
+  exam10: `<rect x="17" y="24" width="12" height="13" rx="2" fill="#fff" opacity=".55"/><rect x="19.5" y="21.5" width="12" height="13" rx="2" fill="#fff"/><text x="25.5" y="31" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="7" fill="C">10</text>`,
+  seen100: `<path d="M16 23.5h7.5a1.5 1.5 0 0 1 1.5 1.5v12a1.5 1.5 0 0 0-1.5-1.5H16zM32 23.5h-7.5" fill="#fff"/><path d="M32 23.5h-6.5a1.5 1.5 0 0 0-1.5 1.5v12a1.5 1.5 0 0 1 1.5-1.5H32z" fill="#fff" opacity=".8"/><text x="24" y="21.5" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="6" fill="#fff">100</text>`,
+  seenall: `<rect x="17" y="21" width="5" height="16" rx="1" fill="#fff"/><rect x="23" y="23" width="4.5" height="14" rx="1" fill="#fff" opacity=".8"/><rect x="28.5" y="21.5" width="4" height="15.5" rx="1" fill="#fff" transform="rotate(8 30.5 29)"/>`,
+  streak3: `<path d="M24 19c1 4 6 6 6 11a6 6 0 0 1-12 0c0-2.5 1.5-4 2.5-5 .3 2 1.3 3 2.3 3-.8-3 .2-6 1.2-9z" fill="#fff"/><text x="24" y="35" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="6.5" fill="C">3</text>`,
+  streak7: `<path d="M24 19c1 4 6 6 6 11a6 6 0 0 1-12 0c0-2.5 1.5-4 2.5-5 .3 2 1.3 3 2.3 3-.8-3 .2-6 1.2-9z" fill="#fff"/><text x="24" y="35" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="6.5" fill="C">7</text>`,
+  signs: `<path d="M24 20l8.5 15h-17z" fill="#fff" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/><path d="M24 23.5l5 9h-10z" fill="C"/><path d="M24 26v3.2" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/><circle cx="24" cy="31" r=".9" fill="#fff"/>`,
+  clean: `<path d="M24 19.5l8 3v6c0 4.6-3.4 7.8-8 9.2-4.6-1.4-8-4.6-8-9.2v-6z" fill="#fff"/><path d="M20.5 29l2.5 2.5 4.5-4.8" fill="none" stroke="C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`,
+};
+const badgeArt = b => `<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M16 4h7l3 10-6 3zM32 4h-7l-3 10 6 3z" fill="${b.c}" opacity=".55"/><circle cx="24" cy="29" r="15" fill="${b.c}"/><circle cx="24" cy="29" r="12.5" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="1.2"/>${(BADGE_GLYPH[b.id] || "").replaceAll('"C"', `"${b.c}"`)}</svg>`;
 const medal = c => `<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M16 4h7l3 10-6 3zM32 4h-7l-3 10 6 3z" fill="${c}" opacity=".55"/><circle cx="24" cy="29" r="15" fill="${c}"/><circle cx="24" cy="29" r="11" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="2"/><path d="M24 21.5l2.3 4.7 5.2.8-3.8 3.6.9 5.1-4.6-2.4-4.6 2.4.9-5.1-3.8-3.6 5.2-.8z" fill="#fff"/></svg>`;
 const nSeen = () => Object.keys(seen).length;
 const BADGES = [
@@ -3270,7 +3377,7 @@ function checkBadges() {
   document.querySelector(".toast")?.remove();
   const t = document.createElement("div");
   t.className = "toast"; t.setAttribute("role", "status");
-  t.innerHTML = `${medal(b.c)}<div><b>Logro conseguido: ${b.n}</b><small>${fresh.length > 1 ? `y ${plural(fresh.length - 1, "logro más", "logros más")}` : b.d}</small></div>`;
+  t.innerHTML = `${badgeArt(b)}<div><b>Logro conseguido: ${b.n}</b><small>${fresh.length > 1 ? `y ${plural(fresh.length - 1, "logro más", "logros más")}` : b.d}</small></div>`;
   document.body.appendChild(t);
   clearTimeout(toastTimer); toastTimer = setTimeout(() => t.remove(), 4200);
 }
