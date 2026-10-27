@@ -767,7 +767,7 @@ button, a, .opt, [data-zoom] { touch-action: manipulation; }
 /* Sin sombras con filtro en las ilustraciones: se repintaban en cada desplazamiento */
 .qimg svg, .qimg img { filter: none; }
 /* Secciones de la portada fuera de la pantalla: el navegador no las dibuja hasta que llegas a ellas */
-main > .section:not(#prog-zone) { content-visibility: auto; contain-intrinsic-size: auto 600px; }
+main > .section:not(#prog-zone), .hpane > .section:not(#prog-zone) { content-visibility: auto; contain-intrinsic-size: auto 600px; }
 @media (max-width: 720px) {
   /* El desenfoque de las barras fijas es muy costoso en móviles: fondo liso */
   .top-nav, body.inq .qfoot, .hero-band .ready { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; background: var(--surface) !important; }
@@ -943,6 +943,56 @@ svg:not(.qimg svg, #modal svg, #lightbox svg) * { animation: none !important; }
 .timer.crit { color: var(--bad); border-color: var(--bad); }
 .timer.crit .ring .rf { stroke: var(--bad); }
 @media (prefers-reduced-motion: no-preference) { .timer.crit { animation: crit 1s ease-in-out infinite; } @keyframes crit { 50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--bad) 25%, transparent); } } }
+
+/* ===== v38: pestañas de portada, anillo de tema, aviso de fallos, resumen y barra por segmentos ===== */
+.htabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 4px; margin-top: 28px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; position: sticky; top: calc(63px + env(safe-area-inset-top, 0px)); z-index: 3; box-shadow: 0 4px 14px -10px rgba(15, 23, 42, .35); }
+.htabs button { font: inherit; font-family: var(--font-display); font-size: 17px; font-weight: 600; padding: 10px 6px; border: 0; border-radius: 10px; background: none; color: var(--muted); cursor: pointer; transition: background-color .15s, color .15s; }
+.htabs button:hover { color: var(--fg); }
+.htabs button[aria-selected="true"] { background: var(--accent); color: var(--accent-fg); }
+.htabs button small { font-family: var(--font-body); font-size: 12px; font-weight: 700; opacity: .75; margin-left: 2px; }
+.htabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.hpane > .section:first-child { padding-top: 24px; }
+@media (max-width: 720px) { .htabs { margin-top: 20px; } .htabs button { font-size: 16px; padding: 9px 4px; } }
+
+.topic { grid-template-columns: 68px minmax(0, 1fr); }
+.tring { position: relative; width: 68px; height: 68px; border-radius: 50%; padding: 4px; background: conic-gradient(var(--tc, var(--accent)) calc(var(--p) * 1%), var(--surface-2) 0); }
+.tring > span { display: block; width: 60px; height: 60px; border-radius: 50%; background: var(--surface); padding: 2px; }
+.topic .tring svg { width: 56px; height: 56px; border-radius: 50%; padding: 7px; }
+.tring b { position: absolute; right: -4px; bottom: -4px; min-width: 30px; padding: 1px 5px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); font-size: 11px; font-weight: 700; text-align: center; color: var(--fg); line-height: 1.5; }
+
+.top-nav a[data-r="fallos"] { position: relative; }
+.nav-badge { display: inline-grid; place-items: center; min-width: 19px; height: 19px; padding: 0 5px; margin-left: 6px; border-radius: 999px; background: var(--bad); color: #fff; font-family: var(--font-body); font-size: 11px; font-weight: 700; line-height: 1; vertical-align: 1px; box-shadow: 0 0 0 2px var(--surface); }
+.nav-badge[hidden] { display: none; }
+@media (max-width: 720px) { .nav-badge { position: absolute; top: 1px; left: calc(50% + 4px); margin: 0; } }
+
+.psum { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 16px 0; }
+.ps { display: grid; grid-template-columns: 40px minmax(0, 1fr); column-gap: 12px; align-items: center; padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.ps-ic { grid-row: span 2; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); }
+.ps.ok .ps-ic { background: var(--ok-soft); color: var(--ok); }
+.ps-ic svg { width: 20px; height: 20px; }
+.ps b { font-family: var(--font-display); font-size: 26px; line-height: 1.05; }
+.ps small { color: var(--muted); font-weight: 600; font-size: 13px; }
+.ps .meter, .ps em { grid-column: 1 / -1; }
+.ps .meter { margin-top: 10px; }
+.ps em { font-style: normal; font-size: 13px; color: var(--muted); margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line); }
+@media (prefers-reduced-motion: no-preference) { .ps { animation: ps-in .4s ease both; } .ps:nth-child(2) { animation-delay: .08s; } .ps:nth-child(3) { animation-delay: .16s; } @keyframes ps-in { from { opacity: 0; transform: translateY(8px); } } }
+
+@media (max-width: 720px) {
+  .psum { gap: 8px; }
+  .ps { grid-template-columns: 1fr; padding: 12px 10px; text-align: center; justify-items: center; }
+  .ps-ic { grid-row: auto; width: 34px; height: 34px; border-radius: 10px; margin-bottom: 6px; }
+  .ps b { font-size: 22px; }
+  .ps small { font-size: 12px; line-height: 1.25; }
+  .ps .meter { width: 100%; margin-top: 8px; }
+  .ps em { font-size: 11.5px; line-height: 1.3; }
+}
+.progress.segs { display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 3px; height: 8px; background: none; border-radius: 0; overflow: visible; }
+.progress.segs i { width: auto; height: 100%; border-radius: 999px; background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line); }
+.progress.segs i.on { background: var(--accent); box-shadow: none; }
+.progress.segs i.ok { background: var(--ok); box-shadow: none; }
+.progress.segs i.bad { background: var(--bad); box-shadow: none; }
+.progress.segs i.cur { box-shadow: 0 0 0 1.5px var(--fg); }
+@media (prefers-reduced-motion: no-preference) { .progress.segs i { transition: background-color .25s; } }
 </style>
 <style>body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
 </head>
@@ -958,7 +1008,7 @@ svg:not(.qimg svg, #modal svg, #lightbox svg) * { animation: none !important; }
       <a href="#examen" data-r="examen"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"/></svg>Examen</a>
       <a href="#senales" data-r="senales"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17v.5"/></svg>Señales</a>
       <a href="#chuleta" data-r="chuleta"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 6h14M5 12h14M5 18h9"/></svg>Chuleta</a>
-      <a href="#fallos" data-r="fallos"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>Mis fallos</a>
+      <a href="#fallos" data-r="fallos"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>Mis fallos<b class="nav-badge" id="fail-badge" hidden></b></a>
       <a href="#fichas" data-r="fichas" class="nav-wide">Fichas</a>
     </nav>
     <span class="focus-tag" aria-live="polite"><i></i>Simulacro en curso</span>
@@ -2090,6 +2140,13 @@ function record(q, ok) {
   if (!ok) { failDay[q.id] = dayKey(); store.set("failday", failDay); }
   ok ? fails.delete(q.id) : fails.add(q.id);
   store.set("seen", seen); store.set("fails", [...fails]);
+  paintFailBadge();
+}
+function paintFailBadge() {
+  const b = $("#fail-badge"); if (!b) return;
+  const n = Q.filter(q => fails.has(q.id)).length;
+  b.hidden = !n; b.textContent = n > 99 ? "99+" : n;
+  b.parentNode.setAttribute("aria-label", n ? `Mis fallos, ${plural(n, "pendiente", "pendientes")}` : "Mis fallos");
 }
 const route = () => location.hash.slice(1) || "inicio";
 function go(r) { if (route() === r) render(); else location.hash = r; }
@@ -2151,13 +2208,10 @@ function home() {
   <div id="next-zone"></div>
   <nav class="sections" aria-label="Secciones">${SECTIONS.map(([h, k, n, d]) => `<a class="sec-tile" href="${h}">${PIC[k]}<span><b>${n}</b><small>${d}</small></span></a>`).join("")}</nav>
 
+  <div class="htabs" role="tablist" aria-label="Portada">${[["hoy", "Hoy"], ["prog", "Progreso"], ["logros", `Logros <small>${BADGES.filter(b => earned[b.id]).length}/${BADGES.length}</small>`]].map(([k, n]) => `<button role="tab" id="htab-${k}" aria-controls="hpane-${k}" aria-selected="${hTab() === k}" data-htab="${k}">${n}</button>`).join("")}</div>
+  <div class="hpane" id="hpane-hoy" role="tabpanel" aria-labelledby="htab-hoy" ${hTab() === "hoy" ? "" : "hidden"}>
   <section class="section" id="plan-zone">${planHTML()}${todayPlanHTML()}</section>
-  <section class="section" id="chance-zone">
-    <div class="section-head"><h2>Probabilidad de aprobar</h2><p>Estimación con tus resultados, no es una predicción oficial</p></div>
-    ${chanceHTML()}
-  </section>
   <section class="section" id="streak-zone" style="padding-top:16px">${streakHTML()}</section>
-  <section class="section" style="padding-top:16px">${calendarHTML()}</section>
   ${(() => { const c = confusionStats().find(x => x.bad >= 2); return c ? `<div class="callout"><span>Parece que confundes <b>${c.n.toLowerCase()}</b>: has fallado ${c.bad} de ${c.tried}.</span><a class="btn" href="#fallos">Ver la clave</a></div>` : ""; })()}
   ${(() => { const w = typeStats().filter(t => t.weak).sort((a, b) => b.rate - a.rate)[0]; return w ? `<div class="callout"><span>Tu punto débil son las preguntas de <b>${w.n.toLowerCase()}</b>: aciertas el ${Math.round((1 - w.rate) * 100)} %.</span><button class="btn" data-qtype="${w.id}">Repasar 15</button></div>` : ""; })()}
 
@@ -2167,9 +2221,10 @@ function home() {
       ${Object.entries(TEMAS).map(([k, t]) => {
         const qs = Q.filter(q => q.t === k), tried = qs.filter(q => seen[q.id] !== undefined).length, ok = qs.filter(q => seen[q.id] === 1).length;
         const p = tried ? Math.round(ok / tried * 100) : 0;
-        return `<button class="topic tc" data-topic="${k}" id="topic-${k}" style="--tc:var(--t-${k})">${ART[t.icon]}<div><h3>${tdot(k)}${t.n}</h3><p>${t.d}</p>
+        const m = Math.round(ok / qs.length * 100);
+        return `<button class="topic tc" data-topic="${k}" id="topic-${k}" style="--tc:var(--t-${k})"><span class="tring" style="--p:${m}" role="img" aria-label="${m} % dominado"><span>${ART[t.icon]}</span><b>${m}%</b></span><div><h3>${tdot(k)}${t.n}</h3><p>${t.d}</p>
         <div class="topic-foot"><span>${tried}/${qs.length} vistas</span><span>${tried ? p + "% de aciertos" : "Sin empezar"}</span></div>
-        <div class="meter"><i class="${pctClass(p)}" style="width:${ok / qs.length * 100}%"></i></div></div></button>`;
+        </div></button>`;
       }).join("")}
     </div>
   </section>
@@ -2187,28 +2242,37 @@ function home() {
     </div>
   </section>
 
+  </div>
+  <div class="hpane" id="hpane-prog" role="tabpanel" aria-labelledby="htab-prog" ${hTab() === "prog" ? "" : "hidden"}>
+  <section class="section" id="chance-zone">
+    <div class="section-head"><h2>Probabilidad de aprobar</h2><p>Estimación con tus resultados, no es una predicción oficial</p></div>
+    ${chanceHTML()}
+  </section>
+  <section class="section" id="cal-zone">${calendarHTML()}</section>
   <section class="section">
     <div class="section-head"><h2>Tu nivel frente al aprobado</h2><p>Para aprobar hay que acertar al menos el 90 %</p></div>
     ${levelHTML()}
   </section>
+  <section class="section" id="prog-zone">
+    <div class="section-head"><h2>Tu progreso</h2><p>Aciertos de tus exámenes y preguntas respondidas cada día</p></div>
+    ${progressHTML()}
+  </section>
+  <section class="section">
+    <div class="section-head"><h2>Últimos exámenes</h2><p>Se guardan solo en este navegador</p></div>
+    <div class="panel">${history.length ? `<table><thead><tr><th>Fecha</th><th>Tipo</th><th>Aciertos</th><th>Fallos</th><th>Tiempo</th><th>Resultado</th></tr></thead><tbody>${history.slice(0, 8).map(h => `<tr><td>${new Date(h.date).toLocaleString("es-ES", { dateStyle: "medium", timeStyle: "short" })}</td><td>${h.kind === "refuerzo" ? "Refuerzo" : h.kind === "real" ? "Realista" : "Simulado"}${h.diff && h.diff !== "normal" ? ` · ${DIFF[h.diff].n}` : ""}</td><td>${h.ok}/${h.n}</td><td>${h.n - h.ok}</td><td>${h.secs ? fmt(h.secs * 1000) : "—"}</td><td><span class="pill ${h.pass ? "pill-ok" : "pill-bad"}">${h.pass ? "APTO" : "NO APTO"}</span></td></tr>`).join("")}</tbody></table>` : `<div class="empty">Todavía no has hecho ningún examen. Cuando termines el primero, verás aquí tu resultado.</div>`}</div>
+  </section>
+  </div>
+  <div class="hpane" id="hpane-logros" role="tabpanel" aria-labelledby="htab-logros" ${hTab() === "logros" ? "" : "hidden"}>
 
   <section class="section">
     <div class="section-head"><h2>Logros</h2><p>${plural(BADGES.filter(b => earned[b.id]).length, "conseguido", "conseguidos")} de ${BADGES.length}</p></div>
     <div class="badges">${BADGES.map(b => { const on = !!earned[b.id], pr = !on && b.p ? b.p() : ""; return `<div class="badge ${on ? "on" : "off"}" title="${on ? "Conseguido el " + new Date(earned[b.id]).toLocaleDateString("es-ES") : "Pendiente"}">${badgeArt(b)}<div><b>${b.n}</b><small>${on ? "Conseguido" : b.d}${pr ? ` · ${pr}` : ""}</small></div></div>`; }).join("")}</div>
   </section>
 
-  <section class="section" id="prog-zone">
-    <div class="section-head"><h2>Tu progreso</h2><p>Aciertos de tus exámenes y preguntas respondidas cada día</p></div>
-    ${progressHTML()}
-  </section>
-
-  <section class="section">
-    <div class="section-head"><h2>Últimos exámenes</h2><p>Se guardan solo en este navegador</p></div>
-    <div class="panel">${history.length ? `<table><thead><tr><th>Fecha</th><th>Tipo</th><th>Aciertos</th><th>Fallos</th><th>Tiempo</th><th>Resultado</th></tr></thead><tbody>${history.slice(0, 8).map(h => `<tr><td>${new Date(h.date).toLocaleString("es-ES", { dateStyle: "medium", timeStyle: "short" })}</td><td>${h.kind === "refuerzo" ? "Refuerzo" : h.kind === "real" ? "Realista" : "Simulado"}${h.diff && h.diff !== "normal" ? ` · ${DIFF[h.diff].n}` : ""}</td><td>${h.ok}/${h.n}</td><td>${h.n - h.ok}</td><td>${h.secs ? fmt(h.secs * 1000) : "—"}</td><td><span class="pill ${h.pass ? "pill-ok" : "pill-bad"}">${h.pass ? "APTO" : "NO APTO"}</span></td></tr>`).join("")}</tbody></table>` : `<div class="empty">Todavía no has hecho ningún examen. Cuando termines el primero, verás aquí tu resultado.</div>`}</div>
-  </section>
+  </div>
   ${aboutNote()}`;
   $("#start-mix").onclick = () => startPractice(shuffle(Q).slice(0, 10), "Práctica rápida");
-  bindPlan(); bindStreak(); drawCharts(); bindTypes(); paintNext();
+  bindPlan(); bindStreak(); drawCharts(); bindTypes(); paintNext(); bindHTabs();
   const gn = $("#go-night"); if (gn) gn.onclick = () => startPractice(shuffle(todayFails()).slice(0, 10), "Repaso antes de dormir");
   document.querySelectorAll("[data-topic]").forEach(b => b.onclick = () => startPractice(shuffle(Q.filter(q => q.t === b.dataset.topic)), TEMAS[b.dataset.topic].n));
 }
@@ -2328,6 +2392,21 @@ function planHTML() {
   </div>`;
 }
 // La primera tarea pendiente del plan de hoy, en grande y arriba del todo
+// Pestañas de la portada; se recuerda la última elegida
+const hTab = () => ["hoy", "prog", "logros"].includes(prefs.htab) ? prefs.htab : "hoy";
+function bindHTabs() {
+  const tabs = [...document.querySelectorAll("[data-htab]")];
+  const show = (k, focus) => {
+    prefs.htab = k; store.set("prefs", prefs);
+    tabs.forEach(b => { const on = b.dataset.htab === k; b.setAttribute("aria-selected", on); b.tabIndex = on ? 0 : -1; $("#hpane-" + b.dataset.htab).hidden = !on; if (on && focus) b.focus(); });
+    if (k === "prog") drawCharts();
+  };
+  tabs.forEach((b, i) => {
+    b.tabIndex = b.getAttribute("aria-selected") === "true" ? 0 : -1;
+    b.onclick = () => show(b.dataset.htab);
+    b.onkeydown = e => { const d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0; if (d) { e.preventDefault(); show(tabs[(i + d + tabs.length) % tabs.length].dataset.htab, true); } };
+  });
+}
 function paintNext() {
   const z = $("#next-zone"); if (!z) return;
   const t = TASKS.find(x => x.done < x.target), all = TASKS.length && !t;
@@ -2860,7 +2939,8 @@ function startExam(kind = "simulado") {
   go("examen");
 }
 function startPractice(qs, title) {
-  PR = { mode: "practice", title, qs: qs.map(mix), ans: {}, flags: new Set(), i: 0, done: false, view: "q" };
+  PR = { mode: "practice", title, qs: qs.map(mix), ans: {}, flags: new Set(), i: 0, done: false, view: "q",
+    pre: { seen: new Set(Object.keys(seen)), fails: new Set(fails), today: daily[dayKey()] || 0 } };
   go("practica");
 }
 const cur = () => route() === "examen" ? EX : route() === "practica" ? PR : null;
@@ -2899,7 +2979,8 @@ function renderQ(S) {
       ${isExam && !S.done ? `<div class="timer ${timerCls(S.end - Date.now())}" id="timer" aria-label="Tiempo restante"><svg class="ring" viewBox="0 0 36 36" aria-hidden="true"><circle class="rb" cx="18" cy="18" r="15.5"/><circle class="rf" id="timer-ring" cx="18" cy="18" r="15.5" stroke-dasharray="${RING_C}" stroke-dashoffset="${ringOff(S.end - Date.now())}"/></svg><span id="timer-val">${fmt(S.end - Date.now())}</span></div>` : ""}
     </div>
   </div>
-  <div class="progress"><i style="width:${answered / S.qs.length * 100}%"></i></div>
+  ${S.qs.length <= 60 ? `<div class="progress segs" style="--n:${S.qs.length}" role="progressbar" aria-label="Preguntas respondidas" aria-valuemin="0" aria-valuemax="${S.qs.length}" aria-valuenow="${answered}">${S.qs.map((q, j) => `<i class="${S.ans[j] === undefined ? "" : S.done || !isExam ? (S.ans[j] === q.a ? "ok" : "bad") : "on"}${j === S.i ? " cur" : ""}"></i>`).join("")}</div>`
+    : `<div class="progress"><i style="width:${answered / S.qs.length * 100}%"></i></div>`}
   ${S.qs.length <= 60 ? `<div class="grid-nav" aria-label="Ir a la pregunta">${S.qs.map((_, j) => `<button class="${navCls(j)}" data-go="${j}" aria-label="Pregunta ${j + 1}${S.flags.has(j) ? ", marcada" : ""}">${j + 1}</button>`).join("")}</div>
   <div class="legend" aria-hidden="true">${isExam && !S.done
     ? `<span><i class="answered"></i>Contestada</span><span><i></i>Sin contestar</span><span class="lg-flag"><i class="flag"></i>Marcada</span>`
@@ -3002,6 +3083,21 @@ function finishExam() {
   if (route() === "examen") resultView(S); else S.view = "result";
 }
 function finishPractice(S) { S.done = true; resultView(S); }
+// Lo que ha aportado la práctica: preguntas nuevas, fallos corregidos y la racha
+function practiceSummaryHTML(S) {
+  if (!S.pre || S.qs.some(q => q.syn)) return "";
+  const done = S.qs.filter((q, j) => S.ans[j] !== undefined);
+  const nuevas = new Set(done.filter(q => !S.pre.seen.has(String(q.id))).map(q => q.id)).size;
+  const fixed = new Set(done.filter(q => S.pre.fails.has(q.id) && !fails.has(q.id)).map(q => q.id)).size;
+  const left = Q.filter(q => fails.has(q.id)).length;
+  const g = goal(), today = daily[dayKey()] || 0, met = today >= g, now = met && S.pre.today < g, n = streakDays();
+  return `<div class="psum" aria-label="Resumen de la práctica">
+    <div class="ps"><span class="ps-ic">${ICON.plus}</span><b>${nuevas}</b><small>${nuevas === 1 ? "pregunta nueva" : "preguntas nuevas"}</small><em>${Object.keys(seen).length} de ${Q.length} vistas</em></div>
+    <div class="ps ${fixed ? "ok" : ""}"><span class="ps-ic">${ICON.check2}</span><b>${fixed}</b><small>${fixed === 1 ? "fallo corregido" : "fallos corregidos"}</small><em>${left ? `Quedan ${left} en Mis fallos` : "No te queda ningún fallo"}</em></div>
+    <div class="ps ${met ? "ok" : ""}"><span class="ps-ic">${ICON.flame}</span><b>${Math.min(today, g)}/${g}</b><small>${now ? "¡Objetivo de hoy cumplido!" : met ? "Objetivo de hoy cumplido" : `Te faltan ${g - today} para hoy`}</small>
+      <div class="meter"><i style="width:${Math.min(100, today / g * 100)}%"></i></div><em>${n ? `Racha de ${plural(n, "día", "días")}` : "Cumple el objetivo para empezar la racha"}</em></div>
+  </div>`;
+}
 
 // Confeti al aprobar un examen (solo una vez y nunca con movimiento reducido)
 function confetti() {
@@ -3065,6 +3161,7 @@ function resultView(S) {
       </div>
     </div>
   </div>
+  ${isExam ? "" : practiceSummaryHTML(S)}
   <div class="card res-sq-card"><h2>Tus respuestas</h2><div class="res-sq">${S.qs.map((q, j) => `<button class="${S.ans[j] === undefined ? "none" : S.ans[j] === q.a ? "ok" : "bad"}" data-rev="${j}" style="--d:${j * 18}ms" aria-label="Pregunta ${j + 1}: ${S.ans[j] === undefined ? "sin responder" : S.ans[j] === q.a ? "acertada" : "fallada"}">${j + 1}</button>`).join("")}</div>
     <div class="legend" aria-hidden="true"><span><i class="r-ok"></i>Acertada</span><span><i class="r-bad"></i>Fallada</span>${S.qs.some((_, j) => S.ans[j] === undefined) ? `<span><i></i>Sin responder</span>` : ""}<span>Toca una para revisarla</span></div></div>
   <div class="res-grid">
@@ -3399,7 +3496,7 @@ function render() {
   else if (r === "buscar") searchView();
   else home();
   window.scrollTo(0, 0);
-  checkBadges();
+  checkBadges(); paintFailBadge();
 }
 let lastRoute = route();
 window.addEventListener("hashchange", () => {
