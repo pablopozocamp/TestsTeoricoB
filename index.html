@@ -756,6 +756,28 @@ main > .section:not(#prog-zone) { content-visibility: auto; contain-intrinsic-si
   .top-nav, body.inq .qfoot, .hero-band .ready { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; background: var(--surface) !important; }
   .card, .panel, .plan, .streak, .topic, .sign, .today-plan, .qcard { box-shadow: 0 1px 2px rgba(20, 32, 51, .06); }
 }
+/* ===== Probabilidad de aprobar ===== */
+.chance { padding: 20px 22px; }
+.ch-main { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 22px; align-items: center; }
+@media (max-width: 560px) { .ch-main { grid-template-columns: 1fr; gap: 12px; } }
+.ch-main p { margin: 0 0 6px; }
+.ch-main .muted { color: var(--muted); font-size: 15px; }
+.ch-big { min-width: 130px; text-align: center; padding: 14px 16px; border-radius: 16px; background: var(--ok-soft); }
+.ch-big b { display: block; font-family: var(--font-display); font-size: 52px; line-height: 1; font-variant-numeric: tabular-nums; color: var(--ok); }
+.ch-big span { font-size: 14px; font-weight: 600; }
+.ch-big.mid { background: var(--warn-soft); } .ch-big.mid b { color: var(--warn); }
+.ch-big.low { background: var(--bad-soft); } .ch-big.low b { color: var(--bad); }
+.ch-meter { margin-top: 10px; height: 10px; }
+.ch-table { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-top: 18px; }
+.ch-table > span { grid-column: 1 / -1; font-size: 14px; color: var(--muted); }
+.ch-table div { background: var(--surface-2); border-radius: 12px; padding: 8px 10px; text-align: center; min-width: 0; border: 2px solid transparent; }
+.ch-table div.now { border-color: var(--accent); }
+.ch-table b { display: block; font-family: var(--font-display); font-size: 22px; font-variant-numeric: tabular-nums; }
+.ch-table small { font-size: 12px; color: var(--muted); }
+@media (max-width: 560px) { .ch-table { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.ch-note { margin: 14px 0 0; font-size: 14px; color: var(--muted); }
+.ch-tips { margin: 10px 0 0; padding-left: 20px; font-size: 15px; }
+.ch-tips li { margin-top: 4px; }
 </style>
 <style>body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
 </head>
@@ -1540,6 +1562,10 @@ function home() {
   </section>
 
   <section class="section" id="plan-zone">${planHTML()}${todayPlanHTML()}</section>
+  <section class="section" id="chance-zone">
+    <div class="section-head"><h2>Probabilidad de aprobar</h2><p>Estimación con tus resultados, no es una predicción oficial</p></div>
+    ${chanceHTML()}
+  </section>
   <section class="section" id="streak-zone" style="padding-top:16px">${streakHTML()}</section>
   ${(() => { const c = confusionStats().find(x => x.bad >= 2); return c ? `<div class="callout"><span>Parece que confundes <b>${c.n.toLowerCase()}</b>: has fallado ${c.bad} de ${c.tried}.</span><a class="btn" href="#fallos">Ver la clave</a></div>` : ""; })()}
 
@@ -1672,6 +1698,62 @@ function bindPlan() {
     const k = b.dataset.gap, un = Q.filter(q => q.t === k && seen[q.id] === undefined);
     startPractice(shuffle(un.length ? un : Q.filter(q => q.t === k)).slice(0, 15), TEMAS[k].n);
   });
+}
+
+/* ---------- Probabilidad de aprobar ----------
+   Se estima el porcentaje de acierto con los últimos exámenes (y, si hay pocos, con la práctica, que cuenta la mitad)
+   y se calcula la probabilidad de cometer 3 fallos o menos en 30 preguntas. Se usa una beta-binomial para que,
+   con pocos datos, la estimación sea prudente en lugar de dar un número demasiado seguro. */
+const lgamma = x => { // Lanczos
+  const g = 7, c = [0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61502916214059, 12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
+  if (x < .5) return Math.log(Math.PI / Math.sin(Math.PI * x)) - lgamma(1 - x);
+  x -= 1; let a = c[0]; const t = x + g + .5; for (let i = 1; i < 9; i++) a += c[i] / (x + i);
+  return .5 * Math.log(2 * Math.PI) + (x + .5) * Math.log(t) - t + Math.log(a);
+};
+const lbeta = (a, b) => lgamma(a) + lgamma(b) - lgamma(a + b);
+const lchoose = (n, k) => lgamma(n + 1) - lgamma(k + 1) - lgamma(n - k + 1);
+function passProbBB(ok, bad) {           // fallos ~ BetaBinomial(30, 1 + bad, 1 + ok)
+  const a = 1 + bad, b = 1 + ok; let p = 0;
+  for (let k = 0; k <= MAX_FAILS; k++) p += Math.exp(lchoose(30, k) + lbeta(k + a, 30 - k + b) - lbeta(a, b));
+  return p;
+}
+function passProbAt(acc) { let p = 0; for (let k = 0; k <= MAX_FAILS; k++) p += Math.exp(lchoose(30, k) + k * Math.log(1 - acc) + (30 - k) * Math.log(acc)); return p; }
+function chanceData() {
+  const ex = history.slice(0, 5);
+  let ok = ex.reduce((s, h) => s + h.ok, 0), n = ex.reduce((s, h) => s + h.n, 0), fromEx = n;
+  if (n < 60) {
+    const v = Object.values(seen), w = .5;
+    ok += v.filter(x => x === 1).length * w; n += v.length * w;
+  }
+  if (n < 20) return null;
+  return { ok, n, fromEx, exams: ex.length, acc: ok / n, p: passProbBB(ok, n - ok) };
+}
+function chanceHTML() {
+  const d = chanceData();
+  if (!d) return `<div class="panel"><div class="empty">Haz un examen o responde al menos 40 preguntas en la práctica para calcular tu probabilidad de aprobar.</div></div>`;
+  const pct = Math.round(d.p * 100), acc = Math.round(d.acc * 100);
+  const tier = pct >= 85 ? ["ok", "Muy probable"] : pct >= 60 ? ["ok", "Bastante probable"] : pct >= 30 ? ["mid", "Vas por buen camino"] : ["low", "Todavía te falta"];
+  const need = [.85, .9, .93, .95, .97].map(a => [a, Math.round(passProbAt(a) * 100)]);
+  const days = prefs.examDate ? daysTo(prefs.examDate) : null;
+  const tips = [];
+  if (d.exams < 3) tips.push(`Con ${d.exams ? plural(d.exams, "examen", "exámenes") : "solo práctica"} la estimación es poco fiable. Haz al menos 3 exámenes.`);
+  const weak = topicStats().filter(t => t.tried >= 5 && t.p < 90).sort((a, b) => a.p - b.p)[0];
+  if (weak) tips.push(`Tu tema más flojo es ${weak.n} (${weak.p} %). Subirlo es lo que más te ayudará.`);
+  if (acc < 95) tips.push(`Si llegas a acertar el 95 % de las preguntas, tu probabilidad sube a cerca del ${Math.round(passProbAt(.95) * 100)} %.`);
+  return `<div class="panel chance">
+    <div class="ch-main">
+      <div class="ch-big ${tier[0]}"><b>${pct} %</b><span>${tier[1]}</span></div>
+      <div>
+        <p><b>Si el examen fuera hoy, tendrías un ${pct} % de probabilidades de aprobar.</b></p>
+        <p class="muted">Aciertas el ${acc} % de las preguntas${d.fromEx ? ` en tus ${plural(d.exams, "último examen", "últimos exámenes")}` : " en la práctica"}. Para aprobar hay que fallar 3 o menos de 30.${days != null && days > 0 ? ` Te ${days === 1 ? "queda 1 día" : `quedan ${days} días`} para mejorarlo.` : ""}</p>
+        <div class="meter ch-meter" role="img" aria-label="${pct} % de probabilidad"><i class="${tier[0] === "ok" ? "" : tier[0]}" style="width:${pct}%"></i></div>
+      </div>
+    </div>
+    <div class="ch-table"><span>Según tu porcentaje de acierto:</span>${need.map(([a, v]) => `<div class="${Math.abs(a - d.acc) < .015 ? "now" : ""}"><b>${v} %</b><small>acertando el ${Math.round(a * 100)} %</small></div>`).join("")}</div>
+    ${Math.round(passProbAt(Math.min(.999, d.acc)) * 100) - pct >= 3 ? `<p class="ch-note">Tu cifra es un poco más baja que la de la tabla porque, con pocos exámenes, la estimación es prudente. Cuantos más hagas, más se ajusta.</p>` : ""}
+    <p class="ch-note">Acertar el 90 % de media no basta: con ese nivel aprobarías unas 2 de cada 3 veces, porque un mal día suma 4 fallos enseguida. Por eso conviene llegar al examen acertando el 95 % o más.</p>
+    ${tips.length ? `<ul class="ch-tips">${tips.map(t => `<li>${t}</li>`).join("")}</ul>` : ""}
+  </div>`;
 }
 
 /* ---------- Plan de hoy ----------
