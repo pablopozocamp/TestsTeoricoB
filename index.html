@@ -572,10 +572,14 @@ h1, h2, h3 { letter-spacing: -.01em; }
 .topic svg { background: linear-gradient(145deg, var(--surface-2), color-mix(in srgb, var(--accent-soft) 70%, var(--surface-2))); border-radius: 14px; }
 @media (prefers-reduced-motion: no-preference) {
   .topic, .sign, .card.lift { transition: transform .2s ease, box-shadow .2s ease, border-color .2s; }
+}
+@media (prefers-reduced-motion: no-preference) and (hover: hover) {
   .topic:hover, .sign:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); }
-  .fade { animation: fade2 .32s cubic-bezier(.2, .7, .2, 1); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .fade { animation: fade2 .2s cubic-bezier(.2, .7, .2, 1); }
   @keyframes fade2 { from { opacity: 0; transform: translateY(8px) scale(.995); } }
-  main > * { animation: rise .4s cubic-bezier(.2, .7, .2, 1) both; }
+  main.enter > * { animation: rise .26s cubic-bezier(.2, .7, .2, 1) both; }
   @keyframes rise { from { opacity: 0; transform: translateY(10px); } }
 }
 .section-head h2 { font-size: 30px; }
@@ -739,6 +743,19 @@ button.topic:disabled { cursor: default; opacity: .7; }
 }
 .arr { font-size: 22px; line-height: 1; margin-top: -2px; }
 @media (min-width: 721px) { .arr { display: none; } }
+/* ===== Fluidez ===== */
+html { -webkit-tap-highlight-color: transparent; }
+button, a, .opt, [data-zoom] { touch-action: manipulation; }
+.btn:active:not(:disabled), .opt:active:not(:disabled), .topic:active { transform: scale(.98); transition-duration: .05s; }
+/* Sin sombras con filtro en las ilustraciones: se repintaban en cada desplazamiento */
+.qimg svg, .qimg img { filter: none; }
+/* Secciones de la portada fuera de la pantalla: el navegador no las dibuja hasta que llegas a ellas */
+main > .section:not(#prog-zone) { content-visibility: auto; contain-intrinsic-size: auto 600px; }
+@media (max-width: 720px) {
+  /* El desenfoque de las barras fijas es muy costoso en móviles: fondo liso */
+  .top-nav, body.inq .qfoot, .hero-band .ready { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; background: var(--surface) !important; }
+  .card, .panel, .plan, .streak, .topic, .sign, .today-plan, .qcard { box-shadow: 0 1px 2px rgba(20, 32, 51, .06); }
+}
 </style>
 <style>body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
 </head>
@@ -1500,7 +1517,7 @@ function home() {
     <div class="badges">${BADGES.map(b => { const on = !!earned[b.id], pr = !on && b.p ? b.p() : ""; return `<div class="badge ${on ? "on" : "off"}" title="${on ? "Conseguido el " + new Date(earned[b.id]).toLocaleDateString("es-ES") : "Pendiente"}">${medal(b.c)}<div><b>${b.n}</b><small>${on ? "Conseguido" : b.d}${pr ? ` · ${pr}` : ""}</small></div></div>`; }).join("")}</div>
   </section>
 
-  <section class="section">
+  <section class="section" id="prog-zone">
     <div class="section-head"><h2>Tu progreso</h2><p>Aciertos de tus exámenes y preguntas respondidas cada día</p></div>
     ${progressHTML()}
   </section>
@@ -1805,7 +1822,9 @@ const CONFUSIONS = [
   { id: "agentes", n: "Agentes y semáforos", re: /agente|semáforo/i,
     key: "Brazo en alto: se detiene quien se acerca. Brazos en horizontal: se detienen los que vienen de frente o por detrás. Amarillo fijo: detenerse si es seguro. Amarillo intermitente: precaución." },
 ];
-const confQs = c => Q.filter(q => (!c.t || q.t === c.t) && c.re.test(q.q + " " + q.o.join(" ") + " " + q.e));
+const confCache = new Map();
+const confQs = c => confCache.get(c) || confCache.set(c, confQs0(c)).get(c);
+const confQs0 = c => Q.filter(q => (!c.t || q.t === c.t) && c.re.test(q.q + " " + q.o.join(" ") + " " + q.e));
 function confusionStats() {
   return CONFUSIONS.map(c => {
     const qs = confQs(c), tried = qs.filter(q => seen[q.id] !== undefined), bad = tried.filter(q => seen[q.id] === 0);
@@ -2004,7 +2023,7 @@ function renderQ(S) {
   <div class="legend" aria-hidden="true">${isExam && !S.done
     ? `<span><i class="answered"></i>Contestada</span><span><i></i>Sin contestar</span><span class="lg-flag"><i class="flag"></i>Marcada</span>`
     : `<span><i class="r-ok"></i>Acertada</span><span><i class="r-bad"></i>Fallada</span><span><i></i>Sin contestar</span>`}<span><i class="current"></i>Pregunta actual</span></div>` : ""}
-  <article class="qcard fade ${q.img ? "" : "noimg"}">
+  <article class="qcard ${S.shown === S.i ? "" : "fade"} ${q.img ? "" : "noimg"}">
     ${q.img ? `<figure class="qimg" data-zoom="${esc(q.img)}" title="Toca para ampliar">${imgHTML(q.img)}<figcaption>Ilustración propia</figcaption><button class="zoom-btn" aria-label="Ampliar imagen">${ICON.zoom}</button></figure>` : ""}
     <div class="qbody">
       <div class="qmeta"><span>Pregunta ${S.i + 1} de ${S.qs.length}</span><span class="tema">· ${TEMAS[q.t].n}</span>${S.flags.has(S.i) && !S.done ? `<span>·</span><span class="flagged">Marcada para revisar</span>` : ""}</div>
@@ -2042,7 +2061,7 @@ function renderQ(S) {
   const f = $("#finish"); if (f) f.onclick = () => isExam ? confirmFinish(S) : finishPractice(S);
   const r = $("#to-result"); if (r) r.onclick = () => resultView(S);
   if (reveal && !S.done) { const nx = $("#next:not(:disabled)") || $("#finish"); nx && nx.focus({ preventScroll: true }); }
-  document.body.classList.add("inq");
+  document.body.classList.add("inq"); S.shown = S.i;
   const cur = app.querySelector(".grid-nav .current"); if (cur) { const g = cur.parentElement; g.scrollLeft = cur.offsetLeft - g.clientWidth / 2 + cur.clientWidth / 2; }
   const ex = app.querySelector(".explain");
   if (ex && S.mode === "practice" && !S.done && S.justAnswered === S.i && matchMedia("(max-width: 720px)").matches) {
@@ -2381,8 +2400,10 @@ function checkBadges() {
 }
 
 /* ====================== Navegación ====================== */
+let enterT;
 function render() {
   const r = route(); syncFocus(); document.body.classList.remove("inq");
+  app.classList.remove("enter"); void app.offsetWidth; app.classList.add("enter"); clearTimeout(enterT); enterT = setTimeout(() => app.classList.remove("enter"), 400);
   document.querySelectorAll(".top-nav a").forEach(a => a.dataset.r === r ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current"));
   if (r === "examen") { if (!EX) examIntro(); else if (EX.done && EX.view === "result") resultView(EX); else renderQ(EX); }
   else if (r === "practica") { if (!PR) return go("inicio"); PR.done && PR.view === "result" ? resultView(PR) : renderQ(PR); }
