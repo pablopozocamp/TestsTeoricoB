@@ -902,7 +902,8 @@ svg:not(.qimg svg, #modal svg, #lightbox svg) * { animation: none !important; }
 
 /* ---------- v36: siguiente paso, calendario, reloj y medallas ---------- */
 #next-zone:empty { display: none; }
-.next-card { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 18px; align-items: center; margin: 18px 0 4px; padding: 18px 22px; background: var(--surface); border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line)); border-left: 6px solid var(--accent); border-radius: 14px; box-shadow: var(--shadow); }
+.next-card { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 18px; align-items: center; margin: 22px 0 0; padding: 18px 22px; background: var(--surface); border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line)); border-left: 6px solid var(--accent); border-radius: 14px; box-shadow: var(--shadow); }
+.next-card a.btn, .next-card a.btn:visited { color: var(--fg); }
 .next-card.done { border-left-color: var(--ok); border-color: color-mix(in srgb, var(--ok) 40%, var(--line)); }
 .next-ic .pic64 { width: 64px; height: 64px; padding: 6px; border-radius: 16px; background: var(--accent-soft); }
 .next-card.done .next-ic { width: 64px; height: 64px; border-radius: 50%; background: var(--ok); color: var(--surface); display: grid; place-items: center; }
@@ -2124,7 +2125,6 @@ function home() {
   const rd = readiness();
   app.innerHTML = `
   ${EX && !EX.done ? `<div class="resume">${ICON.clock}<span><b>Tienes un examen en curso.</b> Te quedan ${fmt(EX.end - Date.now())} y ${plural(EX.qs.length - Object.keys(EX.ans).length, "pregunta", "preguntas")} por responder.</span><a class="btn btn-primary" href="#examen">Continuar examen</a></div>` : ""}
-  <div id="next-zone"></div>
   <section class="hero hero-band">
     <div>
       <div class="eyebrow">Examen teórico · Permiso B</div>
@@ -2148,6 +2148,7 @@ function home() {
     </div>
   </section>
 
+  <div id="next-zone"></div>
   <nav class="sections" aria-label="Secciones">${SECTIONS.map(([h, k, n, d]) => `<a class="sec-tile" href="${h}">${PIC[k]}<span><b>${n}</b><small>${d}</small></span></a>`).join("")}</nav>
 
   <section class="section" id="plan-zone">${planHTML()}${todayPlanHTML()}</section>
