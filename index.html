@@ -483,6 +483,13 @@ body.focus .timer { font-size: 20px; padding: 8px 14px; }
 @media (prefers-reduced-motion: no-preference) { .focus-tag i { animation: blink 1.6s infinite; } @keyframes blink { 50% { opacity: .25; } } }
 body.focus .focus-tag { display: inline-flex; }
 body.focus .top .icon-btn { margin-left: 12px; }
+.diff-pick { padding: 12px 0 14px; border-top: 1px solid var(--line); }
+.diff-pick > b, .diff-pick > small { display: block; }
+.diff-pick > small { color: var(--muted); font-size: 14px; }
+.seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 4px; margin: 10px 0 8px; border: 1px solid var(--line); border-radius: 10px; }
+.seg button { font: inherit; font-weight: 600; padding: 8px 6px; border: 0; border-radius: 7px; background: none; color: var(--muted); cursor: pointer; transition: background .15s, color .15s; }
+.seg button[aria-checked="true"] { background: var(--accent); color: var(--accent-fg); }
+.seg button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .choice.real { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
 
 /* ===== Racha diaria ===== */
@@ -2013,7 +2020,7 @@ function home() {
 
   <section class="section">
     <div class="section-head"><h2>Últimos exámenes</h2><p>Se guardan solo en este navegador</p></div>
-    <div class="panel">${history.length ? `<table><thead><tr><th>Fecha</th><th>Tipo</th><th>Aciertos</th><th>Fallos</th><th>Tiempo</th><th>Resultado</th></tr></thead><tbody>${history.slice(0, 8).map(h => `<tr><td>${new Date(h.date).toLocaleString("es-ES", { dateStyle: "medium", timeStyle: "short" })}</td><td>${h.kind === "refuerzo" ? "Refuerzo" : h.kind === "real" ? "Realista" : "Simulado"}</td><td>${h.ok}/${h.n}</td><td>${h.n - h.ok}</td><td>${h.secs ? fmt(h.secs * 1000) : "—"}</td><td><span class="pill ${h.pass ? "pill-ok" : "pill-bad"}">${h.pass ? "APTO" : "NO APTO"}</span></td></tr>`).join("")}</tbody></table>` : `<div class="empty">Todavía no has hecho ningún examen. Cuando termines el primero, verás aquí tu resultado.</div>`}</div>
+    <div class="panel">${history.length ? `<table><thead><tr><th>Fecha</th><th>Tipo</th><th>Aciertos</th><th>Fallos</th><th>Tiempo</th><th>Resultado</th></tr></thead><tbody>${history.slice(0, 8).map(h => `<tr><td>${new Date(h.date).toLocaleString("es-ES", { dateStyle: "medium", timeStyle: "short" })}</td><td>${h.kind === "refuerzo" ? "Refuerzo" : h.kind === "real" ? "Realista" : "Simulado"}${h.diff && h.diff !== "normal" ? ` · ${DIFF[h.diff].n}` : ""}</td><td>${h.ok}/${h.n}</td><td>${h.n - h.ok}</td><td>${h.secs ? fmt(h.secs * 1000) : "—"}</td><td><span class="pill ${h.pass ? "pill-ok" : "pill-bad"}">${h.pass ? "APTO" : "NO APTO"}</span></td></tr>`).join("")}</tbody></table>` : `<div class="empty">Todavía no has hecho ningún examen. Cuando termines el primero, verás aquí tu resultado.</div>`}</div>
   </section>
   ${aboutNote()}`;
   $("#start-mix").onclick = () => startPractice(shuffle(Q).slice(0, 10), "Práctica rápida");
@@ -2294,14 +2301,14 @@ function drawCharts() {
 let chartRT; window.addEventListener("resize", () => { clearTimeout(chartRT); chartRT = setTimeout(() => { if (route() === "inicio") drawCharts(); }, 150); });
 
 /* ---------- Examen de refuerzo: más peso a fallos y temas flojos ---------- */
-function weakSelection(n) {
+function weakSelection(n, src = Q) {
   const acc = {};
   Object.keys(TEMAS).forEach(k => {
     const qs = Q.filter(q => q.t === k && seen[q.id] !== undefined);
     acc[k] = qs.length ? qs.filter(q => seen[q.id] === 1).length / qs.length : .5;
   });
   // Muestreo ponderado sin reemplazo (claves aleatorias elevadas a 1/peso)
-  return Q.map(q => {
+  return src.map(q => {
     const w = 1 + (fails.has(q.id) ? 8 : 0) + (seen[q.id] === undefined ? 1 : 0) + 6 * (1 - acc[q.t]);
     return { q, k: Math.pow(Math.random(), 1 / w) };
   }).sort((a, b) => b.k - a.k).slice(0, n).map(x => x.q);
@@ -2469,6 +2476,7 @@ function examIntro() {
     <div class="card">
       <h2>Opciones</h2>
       <label class="opt-toggle" for="pref-auto"><input type="checkbox" id="pref-auto" ${prefs.autoNext ? "checked" : ""}><span><b>Pasar a la siguiente al responder</b><small>Avanza solo a la siguiente pregunta pendiente.</small></span></label>
+      <div class="diff-pick"><b>Dificultad</b><small>Para el examen simulado y el de refuerzo. El simulacro realista siempre es normal.</small><div class="seg" role="radiogroup" aria-label="Dificultad">${Object.entries(DIFF).map(([k, v]) => `<button type="button" role="radio" data-diff="${k}" aria-checked="${(prefs.diff || "normal") === k}">${v.n}</button>`).join("")}</div><small id="diff-d">${DIFF[prefs.diff || "normal"].d}</small></div>
       <div class="intro-actions">
         <div class="choice"><div><b>Examen simulado</b><small>30 preguntas al azar de todos los temas, como en la DGT.</small></div><button class="btn btn-primary" id="begin">Empezar</button></div>
         <div class="choice real"><div><b>Simulacro realista</b><small>Como el día de la prueba: sin menús, sin temas ni pistas, sin marcar dudas y sin pasar solo a la siguiente. Solo el reloj y las preguntas.</small></div><button class="btn btn-primary" id="begin-real">Empezar</button></div>
@@ -2479,6 +2487,11 @@ function examIntro() {
     </div>
   </div>`;
   $("#pref-auto").onchange = e => { prefs.autoNext = e.target.checked; store.set("prefs", prefs); };
+  document.querySelectorAll("[data-diff]").forEach(b => b.onclick = () => {
+    prefs.diff = b.dataset.diff; store.set("prefs", prefs);
+    document.querySelectorAll("[data-diff]").forEach(x => x.setAttribute("aria-checked", x === b));
+    $("#diff-d").textContent = DIFF[prefs.diff].d;
+  });
   $("#begin").onclick = () => startExam();
   $("#begin-weak").onclick = () => startExam("refuerzo");
   $("#begin-real").onclick = () => startExam("real");
@@ -2527,9 +2540,28 @@ const whyHTML = (q, chosen) => {
   return ks.length ? `<div class="why"><b>Por qué no son las otras</b><ul>${ks.map(k => `<li class="${k === chosen ? "mine" : ""}"><span class="l">${L[k]}</span><span>${esc(q.w[k])}</span></li>`).join("")}</ul></div>` : "";
 };
 const mix = q => { const ord = shuffle([0, 1, 2]); return { ...q, o: ord.map(i => q.o[i]), a: ord.indexOf(q.a), w: q.w && ord.map(i => q.w[i]) }; };
+// Dificultad estimada de cada pregunta: cifras, excepciones y opciones largas cuentan más; tus fallos también
+const DIFF = { facil: { n: "Fácil", d: "Preguntas más directas y las que sueles acertar." }, normal: { n: "Normal", d: "Mezcla al azar, como en la DGT." }, dificil: { n: "Difícil", d: "Cifras, excepciones, cambios recientes y tus fallos." } };
+const qScore = q => {
+  const txt = q.q + " " + q.o.join(" ");
+  let s = 0;
+  if (/\d/.test(q.o.join(" "))) s += 2;
+  if (/salvo|excepto|excepci|¿qué no|no debe|sin llegar|a partir de/i.test(txt)) s += 1.5;
+  if (q.o.reduce((n, o) => n + o.length, 0) / q.o.length > 45) s += 1;
+  if (/2026|reforma/.test(q.e)) s += 1;
+  if (q.e.length > 200) s += .5;
+  if (fails.has(q.id)) s += 3; else if (seen[q.id] === 1) s -= 1;
+  return s + Math.random() * 1.5;
+};
+const byDiff = (diff, qs = Q) => {
+  if (!diff || diff === "normal") return qs;
+  const r = qs.map(q => ({ q, s: qScore(q) })).sort((a, b) => a.s - b.s).map(x => x.q), cut = Math.round(r.length * .45);
+  return diff === "facil" ? r.slice(0, cut) : r.slice(r.length - cut);
+};
 function startExam(kind = "simulado") {
-  const pool = kind === "refuerzo" ? weakSelection(EXAM_N) : shuffle(Q).slice(0, EXAM_N);
-  EX = { mode: "exam", kind, title: kind === "refuerzo" ? "Examen de refuerzo" : kind === "real" ? "Simulacro realista" : "Examen simulado", qs: pool.map(mix), ans: {}, flags: new Set(), i: 0, done: false, view: "q", start: Date.now(), end: Date.now() + EXAM_MIN * 60000 };
+  const diff = kind === "real" ? "normal" : prefs.diff || "normal", src = byDiff(diff);
+  const pool = kind === "refuerzo" ? weakSelection(EXAM_N, src) : shuffle(src).slice(0, EXAM_N);
+  EX = { mode: "exam", kind, diff, title: (kind === "refuerzo" ? "Examen de refuerzo" : kind === "real" ? "Simulacro realista" : "Examen simulado") + (diff !== "normal" ? ` · ${DIFF[diff].n}` : ""), qs: pool.map(mix), ans: {}, flags: new Set(), i: 0, done: false, view: "q", start: Date.now(), end: Date.now() + EXAM_MIN * 60000 };
   go("examen");
 }
 function startPractice(qs, title) {
@@ -2663,7 +2695,7 @@ function finishExam() {
   S.done = true; S.secs = Math.min(EXAM_MIN * 60, Math.round((Date.now() - S.start) / 1000));
   S.qs.forEach((q, j) => record(q, S.ans[j] === q.a));
   const ok = S.qs.filter((q, j) => S.ans[j] === q.a).length;
-  history.unshift({ date: Date.now(), ok, n: S.qs.length, pass: S.qs.length - ok <= MAX_FAILS, secs: S.secs, kind: S.kind });
+  history.unshift({ date: Date.now(), ok, n: S.qs.length, pass: S.qs.length - ok <= MAX_FAILS, secs: S.secs, kind: S.kind, diff: S.diff });
   history = history.slice(0, 30); store.set("history", history);
   if (route() === "examen") resultView(S); else S.view = "result";
 }
