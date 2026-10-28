@@ -1,5 +1,5 @@
 // Guarda la web para usarla sin conexión. Cambia VERSION al subir una versión nueva.
-const VERSION = "test-b-202610281356";
+const VERSION = "test-b-202610281902";
 const STATE = "tdgt-state";
 const FILES = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png", "apple-touch-icon.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(VERSION).then(c => c.addAll(FILES))); self.skipWaiting(); });
