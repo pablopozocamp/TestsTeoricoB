@@ -1164,6 +1164,13 @@ svg:not(.qimg svg, #modal svg, #lightbox svg) * { animation: none !important; }
 .pstat span { font-weight: 600; color: var(--muted); font-size: 14px; }
 .pstat small { font-size: 13px; color: var(--muted); margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--line); }
 .link-danger { text-align: left; }
+/* Repaso de cifras */
+.nums-cats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 4px 0 6px; }
+@media (max-width: 480px) { .nums-cats { grid-template-columns: 1fr; } }
+.nums-cats button { font: inherit; text-align: left; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); cursor: pointer; display: grid; gap: 2px; transition: border-color .15s, background .15s; }
+.nums-cats button span { font-size: 13px; color: var(--muted); }
+.nums-cats button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent); }
+.nums .btn-row { margin-top: 14px; }
 /* Mapa del banco */
 .bmap { display: grid; gap: 14px; }
 .bmap-key { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 14px; color: var(--muted); }
@@ -2892,6 +2899,8 @@ function home() {
         <div class="meter"><i style="width:${known.size / (SIGNS.length + Q.length) * 100}%"></i></div></div></a>
       <a class="topic" href="#prioridad" id="go-prio">${PIC.prioridad}<div><h3>Quién pasa primero</h3><p>Cruces dibujados con señales, glorietas, tranvías y peatones: toca quién tiene preferencia.</p>
         <div class="topic-foot"><span>${QP.length} cruces${prefs.qpBest ? ` · mejor: ${prefs.qpBest}/${QP.length}` : ""}</span><span>Jugar</span></div></div></a>
+      <button class="topic" id="go-nums">${PIC.chuleta}<div><h3>Repaso de cifras</h3><p>Solo preguntas de números: velocidades, tasas, distancias, plazos, puntos y masas. Es donde más se falla.</p>
+        <div class="topic-foot"><span>${(() => { const a = Q.filter(isNum), t = a.filter(q => seen[q.id] !== undefined); return `${a.length} preguntas${t.length ? ` · aciertas ${Math.round(t.filter(q => seen[q.id] === 1).length / t.length * 100)} %` : ""}`; })()}</span><span>Practicar</span></div></div></button>
       <a class="topic" href="#buscar" id="go-buscar">${PIC.buscar}<div><h3>Buscador</h3><p>Escribe un tema, como «glorieta» o «alcohol», y verás todas las preguntas, señales y cifras sobre él.</p>
         <div class="topic-foot"><span>${Q.length} preguntas y ${SIGNS.length} señales</span><span>Buscar</span></div></div></a>
       ${(() => { const n = todayFails().length; return `<button class="topic" id="go-night" ${n ? "" : "disabled"}>${PIC.noche}<div><h3>Repaso antes de dormir</h3><p>${n ? "Las preguntas que has fallado hoy, para fijarlas antes de acabar el día." : "Cuando falles alguna pregunta hoy, podrás repasarla aquí antes de acabar el día."}</p>
@@ -2931,6 +2940,7 @@ function home() {
   ${aboutNote()}`;
   $("#start-mix").onclick = () => startPractice(shuffle(Q).slice(0, 10), "Práctica rápida");
   bindPlan(); bindStreak(); drawCharts(); bindTypes(); paintNext(); bindHTabs();
+  const gnu = $("#go-nums"); if (gnu) gnu.onclick = openNums;
   const gn = $("#go-night"); if (gn) gn.onclick = () => startPractice(shuffle(todayFails()).slice(0, 10), "Repaso antes de dormir");
   document.querySelectorAll("[data-topic]").forEach(b => b.onclick = () => morphTo(b, () => startPractice(shuffle(Q.filter(q => q.t === b.dataset.topic)), TEMAS[b.dataset.topic].n)));
 }
@@ -3336,7 +3346,7 @@ function cheatView() {
   <button class="btn btn-primary" id="cheat-test">Ponerme a prueba</button></div>
   <div class="cheat">${CHEAT.map(c => `<section class="card"><h2>${ART[c.icon]}${c.h}</h2><dl>${c.rows.map(([k, v, n]) => `<div><dt>${k}</dt><dd>${v}${n ? `<small>${n}</small>` : ""}</dd></div>`).join("")}</dl></section>`).join("")}</div>`;
   // Preguntas con cifras: velocidad, alcohol, puntos y normas
-  $("#cheat-test").onclick = () => startPractice(shuffle(Q.filter(q => /\d/.test(q.o.join(" ")))).slice(0, 15), "Números clave");
+  $("#cheat-test").onclick = openNums;
 }
 
 
@@ -3527,6 +3537,41 @@ function bankMapHTML() {
   return `<div class="section-head"><h2>Mapa del banco</h2><p>${Q.length} preguntas · toca un punto para hacer esa pregunta</p></div>
   <div class="card bmap"><div class="bmap-key"><span><i class="ok"></i>Acertadas <b>${ok}</b></span><span><i class="bad"></i>Falladas <b>${bad}</b></span><span><i></i>Sin ver <b>${Q.length - ok - bad}</b></span></div>
   ${Object.entries(TEMAS).map(([k, t]) => { const qs = Q.filter(q => q.t === k); return `<div class="bmap-row"><div class="bmap-h">${tdot(k)}<b>${t.n}</b><span>${qs.filter(q => seen[q.id] === 1).length}/${qs.length}</span></div><div class="bmap-dots">${qs.map(q => `<i class="${seen[q.id] === 1 ? "ok" : seen[q.id] === 0 ? "bad" : ""}" data-qm="${q.id}" title="${esc(q.q.length > 90 ? q.q.slice(0, 88) + "…" : q.q)}"></i>`).join("")}</div></div>`; }).join("")}</div>`;
+}
+// Repaso de cifras: solo preguntas cuyas respuestas llevan números, por tipo de cifra
+const NUM_CATS = [
+  ["vel", "Velocidades", /km\/h/i],
+  ["alc", "Alcohol y drogas", /mg\/l|g\/l|alcohol/i],
+  ["dist", "Distancias y medidas", /\d\s?(m|metros|cm)\b|metros/i],
+  ["plazo", "Plazos y edades", /\b(años?|meses|días|horas|minutos|edad)\b/i],
+  ["pts", "Puntos y multas", /puntos|€|euros/i],
+  ["peso", "Masas y cargas", /\bkg\b|kilos/i],
+];
+const isNum = q => /\d/.test(q.o.join(" "));
+const numCat = (q, re) => re.test(q.q + " " + q.o.join(" "));
+let numPick = { cat: "all", n: 20, only: "all" };
+function openNums() {
+  const all = Q.filter(isNum);
+  const pool = () => { let qs = numPick.cat === "all" ? all : all.filter(q => numCat(q, NUM_CATS.find(c => c[0] === numPick.cat)[2]));
+    if (numPick.only === "bad") qs = qs.filter(q => seen[q.id] === 0); else if (numPick.only === "new") qs = qs.filter(q => seen[q.id] === undefined); return qs; };
+  const stat = qs => { const t = qs.filter(q => seen[q.id] !== undefined), ok = t.filter(q => seen[q.id] === 1).length; return t.length ? `${Math.round(ok / t.length * 100)} %` : "—"; };
+  const draw = () => {
+    const qs = pool();
+    $("#modal-in").querySelector(".nums").innerHTML = `
+      <div class="nums-cats">${[["all", "Todas", /./], ...NUM_CATS].map(([k, n, re]) => { const c = k === "all" ? all : all.filter(q => numCat(q, re)); return `<button aria-pressed="${numPick.cat === k}" data-nc="${k}"><b>${n}</b><span>${c.length} preguntas · aciertas ${stat(c)}</span></button>`; }).join("")}</div>
+      <span class="field-l">Cuáles</span><div class="seg">${[["all", "Todas"], ["bad", "Falladas"], ["new", "Sin ver"]].map(([k, n]) => `<button type="button" role="radio" aria-checked="${numPick.only === k}" data-no="${k}">${n}</button>`).join("")}</div>
+      <span class="field-l">Cuántas</span><div class="seg">${[10, 20, 30].map(n => `<button type="button" role="radio" aria-checked="${numPick.n === n}" data-nn="${n}">${n}</button>`).join("")}</div>
+      <div class="btn-row"><button class="btn btn-primary" id="nums-go" ${qs.length ? "" : "disabled"}>${qs.length ? `Empezar con ${Math.min(numPick.n, qs.length)}` : "No hay preguntas con este filtro"}</button></div>`;
+    document.querySelectorAll("[data-nc]").forEach(b => b.onclick = () => { numPick.cat = b.dataset.nc; draw(); });
+    document.querySelectorAll("[data-no]").forEach(b => b.onclick = () => { numPick.only = b.dataset.no; draw(); });
+    document.querySelectorAll("[data-nn]").forEach(b => b.onclick = () => { numPick.n = +b.dataset.nn; draw(); });
+    const g = $("#nums-go"); if (g) g.onclick = () => { const name = numPick.cat === "all" ? "Repaso de cifras" : `Cifras: ${NUM_CATS.find(c => c[0] === numPick.cat)[1]}`;
+      // primero las falladas y las que no has visto, después el resto
+      const order = shuffle(pool()).sort((a, b) => (seen[a.id] === 0 ? 0 : seen[a.id] === undefined ? 1 : 2) - (seen[b.id] === 0 ? 0 : seen[b.id] === undefined ? 1 : 2));
+      modal.close(); startPractice(shuffle(order.slice(0, numPick.n)), name); };
+  };
+  openModal("Repaso de cifras", `<p class="modal-lead">Solo preguntas cuyas respuestas son números: velocidades, tasas, distancias, plazos, puntos y masas. Salen antes las que has fallado y las que no has visto.</p><div class="nums"></div>`);
+  draw();
 }
 function guideView() {
   const done = new Set(store.get("bring", []));
