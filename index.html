@@ -11,6 +11,20 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Mi Teórico">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Mi Teórico">
+<meta property="og:locale" content="es_ES">
+<meta property="og:title" content="Mi Teórico · Tests del permiso B">
+<meta property="og:description" content="Practica el examen teórico del permiso B: exámenes de 30 preguntas, práctica por temas y explicaciones de cada respuesta.">
+<meta property="og:url" content="https://pablopozocamp.github.io/TestsTeoricoB/">
+<meta property="og:image" content="https://pablopozocamp.github.io/TestsTeoricoB/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Mi Teórico, tests del examen teórico del permiso B">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Mi Teórico · Tests del permiso B">
+<meta name="twitter:image" content="https://pablopozocamp.github.io/TestsTeoricoB/og.jpg">
+<link rel="canonical" href="https://pablopozocamp.github.io/TestsTeoricoB/">
 <title>Mi Teórico · Permiso B</title>
 <meta name="theme-color" content="#1f4fa3" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0d141e" media="(prefers-color-scheme: dark)">
@@ -1515,6 +1529,36 @@ html.shrink .top { box-shadow: 0 6px 20px -10px rgba(16, 28, 54, .28); }
 .brand-mark { background: none !important; box-shadow: 0 4px 12px -4px color-mix(in srgb, var(--hb1, #1a4a9c) 60%, transparent) !important; border-radius: 28% !important; padding: 0; overflow: hidden; }
 .brand-mark .logo, .sp-mark .logo { width: 100%; height: 100%; display: block; }
 .sp-mark { background: none !important; padding: 0; overflow: hidden; border-radius: 28% !important; }
+
+/* ===== Tarjeta de pregunta premium ===== */
+.qcard { position: relative; border-color: color-mix(in srgb, var(--tc, var(--accent)) 16%, var(--line));
+  box-shadow: 0 1px 1px rgba(16, 28, 54, .04), 0 4px 10px -4px rgba(16, 28, 54, .08), 0 22px 48px -20px color-mix(in srgb, var(--tc, var(--accent)) 30%, rgba(16, 28, 54, .25)); }
+.qcard::before { content: ""; position: absolute; z-index: 2; inset: 0 0 auto 0; height: 4px; pointer-events: none;
+  background: linear-gradient(90deg, var(--tc, var(--accent)), color-mix(in srgb, var(--tc, var(--accent)) 35%, transparent)); }
+.qbody { position: relative; }
+.qnum { position: absolute; top: 10px; right: 18px; font-family: var(--font-display); font-weight: 800; font-size: 58px; line-height: 1; letter-spacing: -.04em;
+  color: color-mix(in srgb, var(--tc, var(--accent)) 14%, transparent); pointer-events: none; user-select: none; font-variant-numeric: tabular-nums; }
+.qbody .qmeta { padding-right: 76px; }
+.qbody .qtext { position: relative; }
+@media (max-width: 560px) { .qnum { font-size: 44px; top: 8px; right: 12px; } .qbody .qmeta { padding-right: 58px; } }
+:root[data-theme="dark"] .qcard { box-shadow: 0 1px 1px rgba(0, 0, 0, .3), 0 22px 48px -22px color-mix(in srgb, var(--tc, var(--accent)) 35%, rgba(0, 0, 0, .6)); }
+:root[data-theme="dark"] .qnum { color: color-mix(in srgb, var(--tc, var(--accent)) 20%, transparent); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .qcard { box-shadow: 0 1px 1px rgba(0, 0, 0, .3), 0 22px 48px -22px color-mix(in srgb, var(--tc, var(--accent)) 35%, rgba(0, 0, 0, .6)); }
+  :root:not([data-theme="light"]) .qnum { color: color-mix(in srgb, var(--tc, var(--accent)) 20%, transparent); } }
+
+/* ===== Botones con tacto: se hunden al pulsar y anillo claro con el teclado ===== */
+.btn, .opt, .topic, .icon-btn, .seg button, .sp-chips button, .filters button, .chips button, .gaps button, .goal button, .htabs button, .grid-nav button, .tile, .qp-pick {
+  -webkit-tap-highlight-color: transparent; }
+@media (prefers-reduced-motion: no-preference) {
+  .btn, .opt, .topic, .icon-btn, .seg button, .sp-chips button, .filters button, .chips button, .gaps button, .goal button, .htabs button, .grid-nav button {
+    transition: border-color .15s, background-color .15s, color .15s, box-shadow .18s, transform .16s cubic-bezier(.3, .7, .4, 1.4); }
+  .btn:active:not(:disabled), .icon-btn:active:not(:disabled), .seg button:active, .sp-chips button:active, .filters button:active, .chips button:active,
+  .gaps button:active, .goal button:active, .htabs button:active, .grid-nav button:active { transform: scale(.96); transition-duration: .06s; }
+  .opt:active:not(:disabled), .topic:active { transform: scale(.985); transition-duration: .06s; }
+}
+.btn:focus-visible, .opt:focus-visible, .topic:focus-visible, .icon-btn:focus-visible, .seg button:focus-visible, .sp-chips button:focus-visible, .filters button:focus-visible,
+.chips button:focus-visible, .gaps button:focus-visible, .goal button:focus-visible, .htabs button:focus-visible, .grid-nav button:focus-visible {
+  outline: none; box-shadow: 0 0 0 2px var(--bg, #fff), 0 0 0 5px color-mix(in srgb, var(--accent) 55%, transparent); }
 </style>
 <script>if (matchMedia("(display-mode: standalone)").matches || navigator.standalone) document.documentElement.classList.add("standalone");</script>
 <style>body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
@@ -4237,9 +4281,10 @@ function renderQ(S) {
   <div class="legend" aria-hidden="true">${isExam && !S.done
     ? `<span><i class="answered"></i>Contestada</span><span><i></i>Sin contestar</span><span class="lg-flag"><i class="flag"></i>Marcada</span>`
     : `<span><i class="r-ok"></i>Acertada</span><span><i class="r-bad"></i>Fallada</span><span><i></i>Sin contestar</span>`}<span><i class="current"></i>Pregunta actual</span></div>` : ""}
-  <article class="qcard ${S.shown === S.i ? "" : S.dir > 0 ? "slide-next" : S.dir < 0 ? "slide-prev" : "fade"} ${q.img ? "" : "noimg"}${S.justAnswered === S.i && S.mode === "practice" ? (chosen === q.a ? " react-ok" : " react-bad") : ""}">
+  <article style="--tc:var(--t-${q.t})" class="qcard ${S.shown === S.i ? "" : S.dir > 0 ? "slide-next" : S.dir < 0 ? "slide-prev" : "fade"} ${q.img ? "" : "noimg"}${S.justAnswered === S.i && S.mode === "practice" ? (chosen === q.a ? " react-ok" : " react-bad") : ""}">
     ${q.img ? `<figure class="qimg" data-zoom="${esc(q.img)}" title="Toca para ampliar">${imgHTML(q.img)}<figcaption>Ilustración propia</figcaption><button class="zoom-btn" aria-label="Ampliar imagen">${ICON.zoom}</button></figure>` : ""}
     <div class="qbody">
+      <span class="qnum" aria-hidden="true">${String(S.i + 1).padStart(2, "0")}</span>
       <div class="qmeta"><span>Pregunta ${S.i + 1} de ${S.qs.length}</span><span class="tema" style="--tc:var(--t-${q.t})">${TEMAS[q.t].n}</span>${S.flags.has(S.i) && !S.done ? `<span>·</span><span class="flagged">Marcada para revisar</span>` : ""}</div>
       <p class="qtext" id="qtext">${reveal ? kwHTML(q.q) : esc(q.q)}</p>
       <div class="opts" role="radiogroup" aria-labelledby="qtext">
