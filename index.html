@@ -1089,6 +1089,37 @@ svg:not(.qimg svg, #modal svg, #lightbox svg) * { animation: none !important; }
 .sync-txt.ok { color: var(--ok); } .sync-txt.off { color: var(--warn); }
 .link-danger { display: block; margin-top: 16px; padding: 0; border: 0; background: none; font: inherit; font-size: 14px; font-weight: 600; color: var(--bad); text-decoration: underline; cursor: pointer; }
 .btn-danger { background: var(--bad); border-color: var(--bad); color: #fff; }
+/* ===== v45: cuenta, menú y Mi perfil ===== */
+.profile-btn { max-width: 210px; }
+.avatar { display: inline-grid; place-items: center; flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(140deg, color-mix(in srgb, var(--accent) 75%, #fff), var(--accent)); color: var(--accent-fg); font-family: var(--font-display); font-weight: 700; font-size: 16px; letter-spacing: .02em; }
+.avatar.sm { width: 24px; height: 24px; font-size: 11px; }
+.avatar.xl { width: 76px; height: 76px; font-size: 28px; }
+.avatar svg { width: 55%; height: 55%; }
+@media (max-width: 720px) { .profile-btn span.avatar.sm { display: inline-grid; width: 26px; height: 26px; } }
+.acct-menu { position: fixed; z-index: 30; width: min(280px, calc(100vw - 24px)); padding: 8px; border-radius: 18px; background: var(--surface); border: 1px solid var(--line); box-shadow: 0 18px 44px -12px rgba(15, 30, 60, .35); }
+.acct-menu[hidden] { display: none; }
+.acct-head { display: flex; gap: 12px; align-items: center; padding: 8px 10px 12px; border-bottom: 1px solid var(--line); margin-bottom: 6px; }
+.acct-head b { display: block; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.acct-head .sync-txt { margin: 2px 0 0; font-size: 12px; display: block; }
+.acct-menu a, .acct-menu button { display: flex; width: 100%; gap: 12px; align-items: center; padding: 10px 12px; border: 0; border-radius: 12px; background: none; font: inherit; font-weight: 600; color: var(--fg); text-decoration: none; cursor: pointer; text-align: left; }
+.acct-menu a:hover, .acct-menu button:hover, .acct-menu a:focus-visible, .acct-menu button:focus-visible { background: var(--surface-2); outline: none; }
+.acct-menu svg { width: 18px; height: 18px; color: var(--muted); }
+.acct-menu .out { color: var(--bad); } .acct-menu .out svg { color: var(--bad); }
+.modal-lead { margin-top: 0; color: var(--muted); }
+.me-card { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 20px; align-items: center; padding: 24px; margin-top: 8px; }
+.me-info h2 { margin: 0 0 4px; font-size: 26px; }
+.me-info p { margin: 2px 0; }
+.me-info .sync-txt { margin: 0; font-size: 14px; }
+.me-actions { margin: 0; }
+@media (max-width: 720px) { .me-card { grid-template-columns: auto minmax(0, 1fr); } .me-actions { grid-column: 1 / -1; } }
+.pstats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 900px) { .pstats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.pstat { padding: 16px 18px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); display: flex; flex-direction: column; gap: 2px; }
+.pstat b { font-family: var(--font-display); font-size: 30px; line-height: 1.05; }
+.pstat b em { font-style: normal; font-size: 17px; color: var(--muted); font-weight: 600; }
+.pstat span { font-weight: 600; color: var(--muted); font-size: 14px; }
+.pstat small { font-size: 13px; color: var(--muted); margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--line); }
+.link-danger { text-align: left; }
 </style>
 <style>body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
 </head>
@@ -1109,7 +1140,7 @@ svg:not(.qimg svg, #modal svg, #lightbox svg) * { animation: none !important; }
     </nav>
     <span class="focus-tag" aria-live="polite"><i></i>Simulacro en curso</span>
     <a class="icon-btn" href="#buscar" id="search-btn" aria-label="Buscar preguntas y señales" title="Buscar"></a>
-    <button class="icon-btn profile-btn" id="profile-btn" aria-label="Perfil del alumno"></button>
+    <button class="icon-btn profile-btn" id="profile-btn" aria-label="Iniciar sesión" aria-expanded="false"></button>
     <button class="icon-btn" id="theme-toggle" aria-label="Cambiar entre modo claro y oscuro"></button>
   </div>
 </header>
@@ -1122,13 +1153,13 @@ svg:not(.qimg svg, #modal svg, #lightbox svg) * { animation: none !important; }
   <div class="wrap">
     <div>
       <a class="brand" href="#inicio" aria-label="Ir al inicio"><span class="brand-mark">B</span><span class="brand-name">Test Teórico<small>Permiso de conducir B</small></span></a>
-      <p>Preguntas de elaboración propia basadas en la normativa de tráfico vigente. Tu progreso se guarda solo en este navegador.</p>
+      <p>Preguntas de elaboración propia basadas en la normativa de tráfico vigente. Tu progreso se guarda en este navegador y, si inicias sesión con tu nombre, también en internet.</p>
     </div>
     <nav aria-label="Accesos rápidos">
       <a href="#examen">Examen simulado</a><a href="#senales">Señales</a>
       <a href="#chuleta">Chuleta de números</a><a href="#fallos">Mis fallos</a>
       <a href="#guia">Guía del día del examen</a><a href="#inicio">Practicar por temas</a>
-      <a href="#fichas">Fichas de estudio</a><a href="#buscar">Buscador</a>
+      <a href="#fichas">Fichas de estudio</a><a href="#buscar">Buscador</a><a href="#perfil">Mi perfil</a>
     </nav>
   </div>
 </footer>
@@ -3610,47 +3641,150 @@ function paintSync() {
   const b = $("#profile-btn"); if (!b) return;
   const d = b.querySelector(".sync-dot"); if (d) d.remove();
   if (syncState && who()) b.insertAdjacentHTML("beforeend", syncIcon());
-  b.title = who() ? `Alumno: ${who()}${syncState ? " · " + SYNC_TXT[syncState] : ""}` : "Poner tu nombre";
+  b.title = who() ? `${who()}${syncState ? " · " + SYNC_TXT[syncState] : ""}` : "Iniciar sesión con tu nombre";
+  const a = $("#acct-sync"); if (a) { a.textContent = SYNC_TXT[syncState] || "Sesión iniciada"; a.className = "sync-txt " + syncState; }
   const t = $("#sync-txt"); if (t) { t.textContent = SYNC_TXT[syncState] || ""; t.className = "sync-txt " + syncState; }
 }
-function paintProfile() { const b = $("#profile-btn"); b.innerHTML = ICON.user + (who() ? `<span>${esc(who())}</span>` : ""); paintSync(); }
-$("#profile-btn").onclick = () => {
-  openModal("Perfil del alumno", `<label class="field" for="p-name">Tu nombre<input id="p-name" maxlength="40" autocomplete="name" value="${esc(who())}" placeholder="Por ejemplo: Laura Pérez"><small>Aparece en la cabecera y en tus resultados. Tu progreso se guarda con este nombre: si lo escribes exactamente igual en otro navegador, se juntan tus datos. Cualquiera que ponga el mismo nombre también los verá.</small>${who() ? `<p class="sync-txt ${syncState}" id="sync-txt" role="status">${SYNC_TXT[syncState] || ""}</p>` : ""}</label>
-    <span class="field-l" id="sw-l">Color de la web <span class="sw-name" id="sw-name">· ${(ACCENTS.find(x => x[0] === (prefs.accent || "azul")) || ACCENTS[0])[1]}</span></span>
-    <div class="swatches" role="radiogroup" aria-labelledby="sw-l">${ACCENTS.map(([k, n, c]) => `<button role="radio" aria-checked="${(prefs.accent || "azul") === k}" aria-label="${n}" title="${n}" data-acc="${k}" style="--sw:${c}">${ICON.check2}</button>`).join("")}</div>
-    ${"vibrate" in navigator ? `<label class="opt-toggle" for="p-vibe"><input type="checkbox" id="p-vibe" ${prefs.vibe !== false ? "checked" : ""}><span><b>Vibrar al responder</b><small>Un toque al acertar y dos al fallar en la práctica.</small></span></label>` : ""}
-    <div class="btn-row"><button class="btn btn-primary" id="p-save">Guardar</button>${who() ? `<button class="btn btn-ghost" id="p-del">Quitar nombre</button>` : ""}</div>
-    ${who() ? `<button class="link-danger" id="p-wipe">Borrar mis datos guardados en internet</button>` : ""}`);
+function paintProfile() {
+  const b = $("#profile-btn"), n = who();
+  b.innerHTML = n ? `<span class="avatar sm" aria-hidden="true">${esc(initials(n))}</span><span>${esc(n)}</span>` : ICON.user + `<span>Iniciar sesión</span>`;
+  b.setAttribute("aria-label", n ? `Cuenta de ${n}` : "Iniciar sesión"); n ? b.setAttribute("aria-haspopup", "menu") : b.removeAttribute("aria-haspopup");
+  paintSync();
+}
+/* ---------- Cuenta: iniciar sesión con el nombre, menú de la cuenta, ajustes y cerrar sesión ---------- */
+const PROGRESS_KEYS = ["seen", "fails", "history", "daily", "badges", "known", "planday", "failday", "deck", "bring"];
+function openLogin() {
+  openModal("Iniciar sesión", `<p class="modal-lead">Escribe tu nombre. Si ya lo usaste en otro navegador, se cargará tu progreso; si es la primera vez, se guardará con él.</p>
+    <label class="field" for="p-name">Tu nombre<input id="p-name" maxlength="40" autocomplete="name" placeholder="Por ejemplo: Laura Pérez"><small>Escríbelo siempre igual, con las mismas mayúsculas. No hay contraseña: cualquiera que ponga el mismo nombre verá y cambiará tu progreso.</small></label>
+    <div class="btn-row"><button class="btn btn-primary" id="p-save">Entrar</button><button class="btn btn-ghost" id="p-set">Ajustes de la web</button></div><p class="sync-txt off" id="l-msg" role="status"></p>`);
   const inp = $("#p-name"); inp.focus();
+  const go = () => {
+    const v = inp.value.trim(); if (!v) { $("#l-msg").textContent = "Escribe tu nombre para entrar."; return; }
+    prefs.name = v; store.set("prefs", prefs); lsSet("syncname", null); paintProfile(); modal.close(); render(); syncStart();
+  };
+  $("#p-save").onclick = go; inp.onkeydown = e => { if (e.key === "Enter") go(); };
+  $("#p-set").onclick = openSettings;
+}
+// Antes de cerrar sesión se sube lo pendiente; luego se vacía el progreso de este navegador para que lo use otra persona
+async function logout(force = false) {
+  closeAcct();
+  if (!force && lsGet("syncdirty")) {
+    await syncPush();
+    if (syncState === "off") {
+      openModal("Cerrar sesión", `<p>No hemos podido guardar tus últimos cambios porque no hay conexión. Si cierras sesión ahora, se perderán.</p>
+        <div class="btn-row"><button class="btn btn-danger" id="lo-yes">Cerrar igualmente</button><button class="btn" id="lo-no">Esperar</button></div>`);
+      $("#lo-no").onclick = () => modal.close(); $("#lo-yes").onclick = () => { modal.close(); logout(true); };
+      return;
+    }
+  }
+  [...PROGRESS_KEYS, "syncname", "syncat", "syncdirty"].forEach(k => lsSet(k, null));
+  prefs.name = ""; lsSet("prefs", JSON.stringify(prefs));
+  try { sessionStorage.setItem("tdgt-synced", "logout"); } catch {}
+  window.history.replaceState(null, "", "#inicio"); location.reload();
+}
+function openSettings() {
+  closeAcct();
+  openModal("Ajustes", `<span class="field-l" id="sw-l">Color de la web <span class="sw-name" id="sw-name">· ${(ACCENTS.find(x => x[0] === (prefs.accent || "azul")) || ACCENTS[0])[1]}</span></span>
+    <div class="swatches" role="radiogroup" aria-labelledby="sw-l">${ACCENTS.map(([k, n, c]) => `<button role="radio" aria-checked="${(prefs.accent || "azul") === k}" aria-label="${n}" title="${n}" data-acc="${k}" style="--sw:${c}">${ICON.check2}</button>`).join("")}</div>
+    <label class="opt-toggle" for="p-auto2"><input type="checkbox" id="p-auto2" ${prefs.autoNext ? "checked" : ""}><span><b>Pasar solo a la siguiente</b><small>En el examen, al elegir una respuesta se pasa a la siguiente pregunta.</small></span></label>
+    ${"vibrate" in navigator ? `<label class="opt-toggle" for="p-vibe"><input type="checkbox" id="p-vibe" ${prefs.vibe !== false ? "checked" : ""}><span><b>Vibrar al responder</b><small>Un toque al acertar y dos al fallar en la práctica.</small></span></label>` : ""}
+    ${who() ? `<button class="link-danger" id="p-wipe">Borrar mis datos guardados en internet</button>` : ""}`);
   document.querySelectorAll("[data-acc]").forEach(b => b.onclick = () => {
     prefs.accent = b.dataset.acc; store.set("prefs", prefs); applyAccent();
     document.querySelectorAll("[data-acc]").forEach(x => x.setAttribute("aria-checked", x === b));
     $("#sw-name").textContent = "· " + b.title;
   });
+  $("#p-auto2").onchange = e => { prefs.autoNext = e.target.checked; store.set("prefs", prefs); };
   const vb = $("#p-vibe"); if (vb) vb.onchange = () => { prefs.vibe = vb.checked; store.set("prefs", prefs); if (vb.checked) buzz(true); };
-  const save = v => {
-    const old = who(); prefs.name = v; store.set("prefs", prefs); paintProfile(); modal.close(); render();
-    if (v && v !== old) { lsSet("syncname", null); syncStart(); }
+  const w = $("#p-wipe"); if (w) w.onclick = openWipe;
+}
+function openWipe() {
+  closeAcct();
+  const name = who();
+  openModal("Borrar tus datos de internet", `<p>Se borrará el progreso guardado con el nombre <b>${esc(name)}</b> y se cerrará la sesión, pero tus preguntas, fallos y exámenes siguen en este navegador.</p>
+    <p class="sync-note">Si tienes la sesión abierta con este nombre en otro navegador, al volver a abrir la web allí se guardará de nuevo. Cierra sesión también en ese navegador.</p>
+    <div class="btn-row"><button class="btn btn-danger" id="w-yes">Borrar</button><button class="btn" id="w-no">Cancelar</button></div><p class="sync-txt" id="w-msg" role="status"></p>`);
+  $("#w-no").onclick = () => modal.close();
+  $("#w-yes").onclick = async () => {
+    $("#w-yes").disabled = true; $("#w-msg").textContent = "Borrando…";
+    if (await syncDelete()) { prefs.name = ""; store.set("prefs", prefs); ["syncname", "syncat", "syncdirty"].forEach(k => lsSet(k, null)); setSync(""); paintProfile(); render(); $("#w-msg").textContent = "Listo: tus datos ya no están guardados en internet."; $("#w-yes").remove(); $("#w-no").textContent = "Cerrar"; }
+    else { $("#w-yes").disabled = false; $("#w-msg").textContent = "No se ha podido borrar. Comprueba la conexión e inténtalo otra vez."; }
   };
-  $("#p-save").onclick = () => save(inp.value.trim());
-  inp.onkeydown = e => { if (e.key === "Enter") save(inp.value.trim()); };
-  const d = $("#p-del"); if (d) d.onclick = () => save("");
-  const w = $("#p-wipe"); if (w) w.onclick = () => {
-    const name = who();
-    openModal("Borrar tus datos de internet", `<p>Se borrará el progreso guardado con el nombre <b>${esc(name)}</b>. En este navegador se quita el nombre, pero tus preguntas, fallos y exámenes siguen aquí.</p>
-      <p class="sync-note">Si tienes la web abierta con este nombre en otro navegador, al volver a abrirla allí se guardará de nuevo. Quita el nombre también en ese navegador.</p>
-      <div class="btn-row"><button class="btn btn-danger" id="w-yes">Borrar</button><button class="btn" id="w-no">Cancelar</button></div><p class="sync-txt" id="w-msg" role="status"></p>`);
-    $("#w-no").onclick = () => modal.close();
-    $("#w-yes").onclick = async () => {
-      $("#w-yes").disabled = true; $("#w-msg").textContent = "Borrando…";
-      if (await syncDelete()) { prefs.name = ""; store.set("prefs", prefs); ["syncname", "syncat", "syncdirty"].forEach(k => lsSet(k, null)); setSync(""); paintProfile(); render(); $("#w-msg").textContent = "Listo: tus datos ya no están guardados en internet."; $("#w-yes").remove(); $("#w-no").textContent = "Cerrar"; }
-      else { $("#w-yes").disabled = false; $("#w-msg").textContent = "No se ha podido borrar. Comprueba la conexión e inténtalo otra vez."; }
-    };
-  };
-};
+}
+// Menú desplegable de la cuenta
+const initials = n => n.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("");
+const acct = document.createElement("div");
+acct.className = "acct-menu"; acct.id = "acct-menu"; acct.hidden = true; acct.setAttribute("role", "menu");
+document.body.appendChild(acct);
+function closeAcct() { if (acct.hidden) return; acct.hidden = true; $("#profile-btn").setAttribute("aria-expanded", "false"); }
+function openAcct() {
+  const b = $("#profile-btn"), r = b.getBoundingClientRect();
+  acct.innerHTML = `<div class="acct-head"><span class="avatar">${esc(initials(who()))}</span><div><b>${esc(who())}</b><small class="sync-txt ${syncState}" id="acct-sync">${SYNC_TXT[syncState] || "Sesión iniciada"}</small></div></div>
+    <a role="menuitem" href="#perfil">${ICON.user}<span>Mi perfil</span></a>
+    <button role="menuitem" id="acct-set"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span>Ajustes</span></button>
+    <button role="menuitem" id="acct-out" class="out">${ICON.close}<span>Cerrar sesión</span></button>`;
+  acct.style.top = `${r.bottom + 8}px`; acct.style.right = `${Math.max(12, innerWidth - r.right)}px`;
+  acct.hidden = false; b.setAttribute("aria-expanded", "true");
+  acct.querySelector("a").onclick = closeAcct;
+  $("#acct-set").onclick = openSettings; $("#acct-out").onclick = () => logout();
+  acct.querySelector("[role=menuitem]").focus();
+}
+document.addEventListener("click", e => { if (!acct.hidden && !acct.contains(e.target) && !e.target.closest("#profile-btn")) closeAcct(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeAcct(); });
+window.addEventListener("resize", closeAcct);
+$("#profile-btn").onclick = () => { if (!who()) return openLogin(); acct.hidden ? openAcct() : closeAcct(); };
+
+/* ---------- Mi perfil: estadísticas ---------- */
+function bestStreak() {
+  const g = goal(), days = Object.keys(daily).filter(d => daily[d] >= g).sort();
+  let best = 0, run = 0, prev = null;
+  days.forEach(d => { const t = new Date(d + "T12:00"); run = prev && Math.round((t - prev) / 864e5) === 1 ? run + 1 : 1; best = Math.max(best, run); prev = t; });
+  return best;
+}
+function profileView() {
+  const name = who(), done = Object.keys(seen).length, right = Object.values(seen).filter(v => v).length;
+  const ex = history.length, pass = history.filter(h => h.pass).length, best = history.reduce((m, h) => Math.max(m, h.ok / h.n), 0);
+  const total = Object.values(daily).reduce((a, n) => a + n, 0), studied = Object.keys(daily).filter(d => daily[d] > 0).length;
+  const first = [...Object.keys(daily).filter(d => daily[d] > 0).sort().slice(0, 1).map(d => new Date(d + "T12:00")), ...history.map(h => new Date(h.date))].sort((a, b) => a - b)[0];
+  const secs = history.filter(h => h.secs), avg = secs.length ? secs.reduce((a, h) => a + h.secs, 0) / secs.length : 0;
+  const got = BADGES.filter(b => earned[b.id]).length, rd = readiness();
+  const tile = (v, l, sub = "") => `<div class="pstat"><b>${v}</b><span>${l}</span>${sub ? `<small>${sub}</small>` : ""}</div>`;
+  app.innerHTML = `
+  <div class="page-head"><div class="eyebrow">Tu cuenta</div><h1>Mi perfil</h1></div>
+  <section class="card me-card">
+    <span class="avatar xl">${name ? esc(initials(name)) : ICON.user}</span>
+    <div class="me-info"><h2>${name ? esc(name) : "Sin iniciar sesión"}</h2>
+      <p>${name ? `<span class="sync-txt ${syncState}">${SYNC_TXT[syncState] || "Sesión iniciada"}</span>` : "Tu progreso solo está en este navegador. Inicia sesión con tu nombre para guardarlo y recuperarlo en otros navegadores."}</p>
+      ${first ? `<p class="muted">Estudiando desde el ${first.toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" })}</p>` : ""}</div>
+    <div class="btn-row me-actions">${name ? `<button class="btn" id="me-set">Ajustes</button><button class="btn" id="me-out">Cerrar sesión</button>` : `<button class="btn btn-primary" id="me-in">Iniciar sesión</button><button class="btn" id="me-set">Ajustes</button>`}</div>
+  </section>
+  <section class="section"><div class="section-head"><h2>Tus números</h2><p>${rd ? `Nivel: ${rd.label}` : "Haz un examen para ver tu nivel"}</p></div>
+    <div class="pstats">
+      ${tile(`${done}<em>/${Q.length}</em>`, "preguntas vistas", `${Math.round(done / Q.length * 100)} % del banco`)}
+      ${tile(`${done ? Math.round(right / done * 100) : 0} %`, "de aciertos", `${right} acertadas`)}
+      ${tile(fails.size, "fallos por repasar", fails.size ? `<a href="#fallos">Repasarlos</a>` : "¡Ninguno!")}
+      ${tile(ex, ex === 1 ? "examen hecho" : "exámenes hechos", ex ? `${pass} ${pass === 1 ? "aprobado" : "aprobados"} (${Math.round(pass / ex * 100)} %)` : "")}
+      ${tile(ex ? `${Math.round(best * 30)}<em>/30</em>` : "—", "mejor nota", avg ? `Tiempo medio: ${fmt(avg * 1000)}` : "")}
+      ${tile(plural(streakDays(), "día", "días"), "racha actual", `Mejor racha: ${plural(bestStreak(), "día", "días")}`)}
+      ${tile(studied, studied === 1 ? "día estudiado" : "días estudiados", `${total} respuestas en total`)}
+      ${tile(`${got}<em>/${BADGES.length}</em>`, "logros", `${known.size} fichas sabidas`)}
+    </div></section>
+  <section class="section"><div class="section-head"><h2>Por temas</h2><p>Para aprobar hay que acertar al menos el 90 %</p></div>${levelHTML()}</section>
+  <section class="section"><div class="section-head"><h2>Tipos de pregunta</h2><p>Qué te cuesta más, sea del tema que sea</p></div>${typesHTML()}</section>
+  <section class="section"><div class="section-head"><h2>Últimos exámenes</h2><p>${ex ? plural(ex, "examen", "exámenes") + " en total" : ""}</p></div>
+    <div class="panel">${ex ? `<table><thead><tr><th>Fecha</th><th>Tipo</th><th>Aciertos</th><th>Tiempo</th><th>Resultado</th></tr></thead><tbody>${history.slice(0, 10).map(h => `<tr><td>${new Date(h.date).toLocaleString("es-ES", { dateStyle: "medium", timeStyle: "short" })}</td><td>${h.kind === "refuerzo" ? "Refuerzo" : h.kind === "real" ? "Realista" : "Simulado"}</td><td>${h.ok}/${h.n}</td><td>${h.secs ? fmt(h.secs * 1000) : "—"}</td><td><span class="pill ${h.pass ? "pill-ok" : "pill-bad"}">${h.pass ? "APTO" : "NO APTO"}</span></td></tr>`).join("")}</tbody></table>` : emptyArt("examen", "Todavía no has hecho ningún examen.")}</div></section>
+  <section class="section"><div class="section-head"><h2>Logros</h2><p>${got} de ${BADGES.length}</p></div>
+    <div class="badges">${BADGES.map(b => { const on = !!earned[b.id], pr = !on && b.p ? b.p() : ""; return `<div class="badge ${on ? "on" : "off"}">${badgeArt(b)}<div><b>${b.n}</b><small>${on ? "Conseguido el " + new Date(earned[b.id]).toLocaleDateString("es-ES") : b.d}${pr ? ` · ${pr}` : ""}</small></div></div>`; }).join("")}</div></section>
+  ${name ? `<section class="section"><button class="link-danger" id="me-wipe">Borrar mis datos guardados en internet</button></section>` : ""}`;
+  $("#me-set").onclick = openSettings;
+  const o = $("#me-out"); if (o) o.onclick = () => logout();
+  const li = $("#me-in"); if (li) li.onclick = openLogin;
+  const w = $("#me-wipe"); if (w) w.onclick = openWipe;
+  bindTypes();
+}
 paintProfile();
 syncStart().then(() => { if (lsGet("syncdirty") && syncState !== "busy") syncPush(); });
-try { const syncKind = sessionStorage.getItem("tdgt-synced"); if (syncKind) { sessionStorage.removeItem("tdgt-synced"); setTimeout(() => { const t = document.createElement("div"); t.className = "toast"; t.setAttribute("role", "status"); const merged = syncKind === "merge"; t.innerHTML = `<div><b>${merged ? "Progreso juntado" : "Progreso cargado"}</b><small>${merged ? `Hemos sumado lo de este navegador con lo guardado de «${esc(who())}».` : `Los datos de «${esc(who())}» ya están en este navegador.`}</small></div>`; document.body.appendChild(t); setTimeout(() => t.remove(), 4000); }, 300); } } catch {}
+try { const syncKind = sessionStorage.getItem("tdgt-synced"); if (syncKind) { sessionStorage.removeItem("tdgt-synced"); setTimeout(() => { const t = document.createElement("div"); t.className = "toast"; t.setAttribute("role", "status"); const merged = syncKind === "merge"; t.innerHTML = syncKind === "logout" ? `<div><b>Sesión cerrada</b><small>Tu progreso está guardado; vuelve a entrar con tu nombre para recuperarlo.</small></div>` : `<div><b>${merged ? "Progreso juntado" : "Progreso cargado"}</b><small>${merged ? `Hemos sumado lo de este navegador con lo guardado de «${esc(who())}».` : `Los datos de «${esc(who())}» ya están en este navegador.`}</small></div>`; document.body.appendChild(t); setTimeout(() => t.remove(), 4000); }, 300); } } catch {}
 
 /* ---------- Ayuda en práctica ----------
    Recuerda la norma que se aplica a la pregunta, según su tema, sin marcar la opción correcta. */
@@ -3782,6 +3916,7 @@ function render() {
   else if (r === "guia") guideView();
   else if (r === "fichas") fichasView();
   else if (r === "buscar") searchView();
+  else if (r === "perfil") profileView();
   else home();
   window.scrollTo(0, 0);
   checkBadges(); paintFailBadge();
