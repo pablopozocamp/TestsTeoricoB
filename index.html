@@ -10,8 +10,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Test B">
-<title>Test Teórico Permiso B</title>
+<meta name="apple-mobile-web-app-title" content="Mi Teórico">
+<title>Mi Teórico · Permiso B</title>
 <meta name="theme-color" content="#1f4fa3" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0d141e" media="(prefers-color-scheme: dark)">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1487,7 +1487,7 @@ html.standalone #splash { display: grid; position: fixed; inset: 0; z-index: 999
   <div class="wrap">
     <a class="brand" href="#inicio" aria-label="Ir al inicio">
       <span class="brand-mark">B</span>
-      <span class="brand-name">Test Teórico<small>Permiso de conducir B</small></span>
+      <span class="brand-name">Mi Teórico<small>Permiso de conducir B</small></span>
     </a>
     <nav class="top-nav" aria-label="Secciones">
       <a href="#inicio" data-r="inicio"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z"/></svg>Inicio</a>
@@ -1504,7 +1504,7 @@ html.standalone #splash { display: grid; position: fixed; inset: 0; z-index: 999
   </div>
 </header>
 
-<div id="splash" aria-hidden="true"><div class="sp-in"><span class="sp-mark">B</span><b>Test Teórico</b><small>Permiso de conducir B</small><i class="sp-bar"></i></div></div>
+<div id="splash" aria-hidden="true"><div class="sp-in"><span class="sp-mark">B</span><b>Mi Teórico</b><small>Permiso de conducir B</small><i class="sp-bar"></i></div></div>
 <main class="wrap" id="app"></main>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><filter id="lg-refract" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="0.006 0.018" numOctaves="2" seed="7" result="n"/><feGaussianBlur in="n" stdDeviation="2.5" result="nb"/><feDisplacementMap in="SourceGraphic" in2="nb" scale="22" xChannelSelector="R" yChannelSelector="G"/></filter></svg>
 <dialog class="modal" id="modal"><div class="modal-in" id="modal-in"></div></dialog>
@@ -1512,7 +1512,7 @@ html.standalone #splash { display: grid; position: fixed; inset: 0; z-index: 999
 <footer class="foot">
   <div class="wrap">
     <div>
-      <a class="brand" href="#inicio" aria-label="Ir al inicio"><span class="brand-mark">B</span><span class="brand-name">Test Teórico<small>Permiso de conducir B</small></span></a>
+      <a class="brand" href="#inicio" aria-label="Ir al inicio"><span class="brand-mark">B</span><span class="brand-name">Mi Teórico<small>Permiso de conducir B</small></span></a>
       <p>Preguntas de elaboración propia basadas en la normativa de tráfico vigente. Tu progreso se guarda en este navegador y, si inicias sesión con tu nombre, también en internet.</p>
     </div>
     <nav aria-label="Accesos rápidos">
@@ -4356,7 +4356,7 @@ async function shareResult(S, ok) {
   });
   x.fillStyle = "#fff"; x.font = `600 44px ${F}`;
   x.fillText([who(), new Date().toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" })].filter(Boolean).join(" · "), 540, 900);
-  x.font = `600 34px ${F}`; x.fillStyle = "rgba(255,255,255,.75)"; x.fillText("Examen de práctica · pablopozocamp.github.io/TestsTeoricoB", 540, 990);
+  x.font = `600 34px ${F}`; x.fillStyle = "rgba(255,255,255,.75)"; x.fillText("Mi Teórico · pablopozocamp.github.io/TestsTeoricoB", 540, 990);
   const blob = await new Promise(r => c.toBlob(r, "image/png"));
   const file = new File([blob], "mi-apto.png", { type: "image/png" });
   if (navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -4370,7 +4370,7 @@ function licHTML(S, ok, pass) {
   const n = who(), bad = S.qs.length - ok, when = S.old ? new Date(S.old) : new Date();
   const f = (k, l, v) => `<div><dt><i>${k}.</i> ${l}</dt><dd>${v}</dd></div>`;
   return `<div class="lic ${pass ? "ok" : "bad"}" role="img" aria-label="${pass ? "Apto" : "No apto"}: ${ok} de ${S.qs.length} aciertos">
-    <div class="lic-top"><span class="lic-b">B</span><div><b>Test Teórico</b><small>Simulacro de examen · Permiso B</small></div></div>
+    <div class="lic-top"><span class="lic-b">B</span><div><b>Mi Teórico</b><small>Simulacro de examen · Permiso B</small></div></div>
     <div class="lic-body"><span class="lic-photo">${n ? esc(initials(n)) : ICON.user}</span>
       <dl>${f(1, "Nombre", n ? esc(n.split(" ").slice(0, 2).join(" ")) : "Sin nombre")}${f(2, "Fecha", when.toLocaleDateString("es-ES"))}${f(3, "Aciertos", `${ok}/${S.qs.length}`)}${f(4, "Fallos", bad)}${S.secs ? f(5, "Tiempo", fmt(S.secs * 1000)) : ""}</dl></div>
     <span class="lic-stamp">${pass ? "APTO" : "NO APTO"}</span>
