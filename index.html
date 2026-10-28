@@ -16,7 +16,7 @@
 <meta name="theme-color" content="#0d141e" media="(prefers-color-scheme: dark)">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Source+Sans+3:wght@400;500;600;700&display=swap">
 <style>
 /* Layout: barra superior fija tipo panel de examen; una columna de 1120px; en examen, imagen a la izquierda y respuestas a la derecha. */
 :root {
@@ -36,7 +36,7 @@
   --warn: #9a6412;
   --warn-soft: #fdf1dc;
   --shadow: 0 1px 2px rgba(20, 32, 51, .06), 0 4px 16px rgba(20, 32, 51, .06);
-  --font-display: "Barlow Semi Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --font-display: "Outfit", "Segoe UI", system-ui, sans-serif;
   --font-body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
   --radius: 10px;
   --band: #133a7c;
@@ -1478,6 +1478,36 @@ html.standalone #splash { display: grid; position: fixed; inset: 0; z-index: 999
 .me-chips span { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; font-size: 13px; font-weight: 600; background: var(--accent-soft); color: var(--accent); }
 .me-chips svg { width: 14px; height: 14px; }
 @media (max-width: 720px) { .me-card.cover .avatar.xl { width: 88px; height: 88px; font-size: 30px; margin-top: -48px; } .me-band { height: 96px; } }
+
+/* ===== Diseño moderno: tipografía, cabecera que se encoge, mapa de fondo y banner aurora ===== */
+h1, h2, h3, .brand-name { letter-spacing: -.015em; }
+h1 { font-weight: 700; }
+:root { --map: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='520' height='520' viewBox='0 0 520 520'%3E%3Cg fill='none' stroke='%23233a66' stroke-linecap='round'%3E%3Cpath stroke-width='14' d='M-10 130 H530 M-10 390 C120 380 200 420 300 400 S460 360 530 380 M140 -10 V530 M380 -10 C390 120 360 200 372 300 S400 460 392 530'/%3E%3Cpath stroke-width='6' d='M-10 260 H140 M140 60 H380 M260 130 V400 M380 220 H530 M40 130 V390 M140 470 H392 M470 -10 V130'/%3E%3Ccircle cx='260' cy='260' r='34' stroke-width='10'/%3E%3Ccircle cx='260' cy='260' r='12' stroke-width='3'/%3E%3Cpath stroke-width='2' stroke-dasharray='10 12' d='M-10 130 H530 M140 -10 V530'/%3E%3C/g%3E%3C/svg%3E"); --map-op: .045; }
+:root[data-theme="dark"] { --map: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='520' height='520' viewBox='0 0 520 520'%3E%3Cg fill='none' stroke='%23cfe0ff' stroke-linecap='round'%3E%3Cpath stroke-width='14' d='M-10 130 H530 M-10 390 C120 380 200 420 300 400 S460 360 530 380 M140 -10 V530 M380 -10 C390 120 360 200 372 300 S400 460 392 530'/%3E%3Cpath stroke-width='6' d='M-10 260 H140 M140 60 H380 M260 130 V400 M380 220 H530 M40 130 V390 M140 470 H392 M470 -10 V130'/%3E%3Ccircle cx='260' cy='260' r='34' stroke-width='10'/%3E%3Ccircle cx='260' cy='260' r='12' stroke-width='3'/%3E%3Cpath stroke-width='2' stroke-dasharray='10 12' d='M-10 130 H530 M140 -10 V530'/%3E%3C/g%3E%3C/svg%3E"); --map-op: .055; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --map: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='520' height='520' viewBox='0 0 520 520'%3E%3Cg fill='none' stroke='%23cfe0ff' stroke-linecap='round'%3E%3Cpath stroke-width='14' d='M-10 130 H530 M-10 390 C120 380 200 420 300 400 S460 360 530 380 M140 -10 V530 M380 -10 C390 120 360 200 372 300 S400 460 392 530'/%3E%3Cpath stroke-width='6' d='M-10 260 H140 M140 60 H380 M260 130 V400 M380 220 H530 M40 130 V390 M140 470 H392 M470 -10 V130'/%3E%3Ccircle cx='260' cy='260' r='34' stroke-width='10'/%3E%3Ccircle cx='260' cy='260' r='12' stroke-width='3'/%3E%3Cpath stroke-width='2' stroke-dasharray='10 12' d='M-10 130 H530 M140 -10 V530'/%3E%3C/g%3E%3C/svg%3E"); --map-op: .055; } }
+body::after { content: ""; position: fixed; inset: 0; height: auto; z-index: -1; pointer-events: none; background: var(--map) 0 0 / 520px 520px repeat; opacity: var(--map-op);
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, .55) 60%, #000 100%); mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, .55) 60%, #000 100%); }
+body { position: relative; isolation: isolate; }
+/* Cabecera: al bajar se vuelve una barra fina */
+.top .wrap { transition: min-height .28s ease; }
+.top .brand-mark { transition: width .28s ease, height .28s ease, font-size .28s ease, border-radius .28s ease; }
+.top .brand-name { transition: font-size .28s ease; }
+.top .brand-name small { display: block; transition: opacity .2s ease, max-height .28s ease; max-height: 16px; overflow: hidden; }
+html.shrink .top .wrap { min-height: 46px; }
+html.shrink .top .brand-mark { width: 28px; height: 28px; font-size: 16px; border-radius: 7px; }
+html.shrink .top .brand-name { font-size: 17px; }
+html.shrink .top .brand-name small { opacity: 0; max-height: 0; }
+html.shrink .top { box-shadow: 0 6px 20px -10px rgba(16, 28, 54, .28); }
+/* Banner aurora: los brillos del degradado se mueven muy despacio */
+@property --ax { syntax: "<percentage>"; inherits: false; initial-value: 78%; }
+@property --ay { syntax: "<percentage>"; inherits: false; initial-value: 30%; }
+@property --bx { syntax: "<percentage>"; inherits: false; initial-value: 12%; }
+@property --by { syntax: "<percentage>"; inherits: false; initial-value: 110%; }
+.hero-band::before { background: var(--stars, none), radial-gradient(640px 400px at var(--ax) var(--ay), var(--hglow, rgba(95, 160, 255, .38)), transparent 70%), radial-gradient(560px 360px at var(--bx) var(--by), var(--hglow2, rgba(64, 200, 190, .22)), transparent 70%), radial-gradient(420px 300px at calc(100% - var(--bx)) calc(var(--ay) + 40%), rgba(150, 120, 255, .18), transparent 70%), linear-gradient(160deg, var(--hb1, #1a4a9c) 0%, var(--hb2, #0f2f66) 55%, var(--hb3, #0b2150) 100%); }
+@media (prefers-reduced-motion: no-preference) {
+  .hero-band::before { animation: aurora 26s ease-in-out infinite alternate; }
+  @keyframes aurora { 0% { --ax: 78%; --ay: 30%; --bx: 12%; --by: 110%; } 35% { --ax: 62%; --ay: 12%; --bx: 30%; --by: 88%; } 70% { --ax: 88%; --ay: 52%; --bx: 4%; --by: 70%; } 100% { --ax: 70%; --ay: 22%; --bx: 22%; --by: 100%; } }
+}
 </style>
 <script>if (matchMedia("(display-mode: standalone)").matches || navigator.standalone) document.documentElement.classList.add("standalone");</script>
 <style>body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
@@ -4338,7 +4368,7 @@ function confetti() {
 async function shareResult(S, ok) {
   await document.fonts.ready.catch(() => {});
   const c = document.createElement("canvas"); c.width = c.height = 1080;
-  const x = c.getContext("2d"), F = "'Barlow Semi Condensed', 'Arial Narrow', Arial, sans-serif", n = S.qs.length;
+  const x = c.getContext("2d"), F = "Outfit, 'Segoe UI', Arial, sans-serif", n = S.qs.length;
   const g = x.createLinearGradient(0, 0, 1080, 1080); g.addColorStop(0, "#137a49"); g.addColorStop(1, "#0a3a24");
   x.fillStyle = g; x.fillRect(0, 0, 1080, 1080);
   x.fillStyle = "rgba(255,255,255,.08)"; x.beginPath(); x.arc(900, 150, 260, 0, 7); x.fill(); x.beginPath(); x.arc(120, 980, 200, 0, 7); x.fill();
@@ -4974,6 +5004,9 @@ if (matchMedia("(hover: hover) and (pointer: fine) and (prefers-reduced-motion: 
   }, { passive: true });
   document.addEventListener("pointerleave", () => { if (tl) reset(tl); tl = null; });
 }
+// Cabecera fina al bajar por la página
+{ let raf = 0; const upd = () => { raf = 0; document.documentElement.classList.toggle("shrink", scrollY > 40); };
+  addEventListener("scroll", () => { if (!raf) raf = requestAnimationFrame(upd); }, { passive: true }); upd(); }
 // Accesos directos del icono de la app: ?go=exam abre un examen nuevo
 if (new URLSearchParams(location.search).get("go") === "exam") { window.history.replaceState(null, "", location.pathname + "#examen"); startExam(); }
 else render();
