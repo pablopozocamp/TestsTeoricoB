@@ -768,6 +768,8 @@ button, a, .opt, [data-zoom] { touch-action: manipulation; }
 .qimg svg, .qimg img { filter: none; }
 /* Secciones de la portada fuera de la pantalla: el navegador no las dibuja hasta que llegas a ellas */
 main > .section:not(#prog-zone), .hpane > .section:not(#prog-zone) { content-visibility: auto; contain-intrinsic-size: auto 600px; }
+/* Las secciones con tarjetas que se inclinan no recortan lo que sobresale */
+main > .section:not(#prog-zone):has(.topic, .sec-tile, .pstat), .hpane > .section:not(#prog-zone):has(.topic, .sec-tile, .pstat) { content-visibility: visible; }
 @media (max-width: 720px) {
   /* El desenfoque de las barras fijas es muy costoso en móviles: fondo liso */
   .top-nav, body.inq .qfoot, .hero-band .ready { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; background: var(--surface) !important; }
@@ -4224,7 +4226,7 @@ if (matchMedia("(hover: hover) and (pointer: fine) and (prefers-reduced-motion: 
     if (tl && tl !== el) reset(tl);
     tl = el; if (!el) return;
     const r = el.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
-    const k = el.classList.contains("topic") ? 7 : 5;
+    const k = el.classList.contains("topic") ? 6 : 4;
     el.classList.add("tilt");
     el.style.setProperty("--rx", `${((.5 - y) * k).toFixed(2)}deg`); el.style.setProperty("--ry", `${((x - .5) * k).toFixed(2)}deg`);
     el.style.setProperty("--mx", `${(x * 100).toFixed(1)}%`); el.style.setProperty("--my", `${(y * 100).toFixed(1)}%`);
