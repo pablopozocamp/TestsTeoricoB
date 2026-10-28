@@ -1162,6 +1162,41 @@ svg:not(.qimg svg, #modal svg, #lightbox svg) * { animation: none !important; }
 .pstat span { font-weight: 600; color: var(--muted); font-size: 14px; }
 .pstat small { font-size: 13px; color: var(--muted); margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--line); }
 .link-danger { text-align: left; }
+/* Tarjetas que se inclinan con el ratón */
+.topic, .sec-tile, .pstat { position: relative; }
+.topic::after, .sec-tile::after, .pstat::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity .3s;
+  background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, .5), transparent 55%); mix-blend-mode: soft-light; }
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .topic, .sec-tile, .pstat { transition: transform .45s cubic-bezier(.2, .8, .2, 1), box-shadow .3s, border-color .2s; will-change: transform; }
+  .topic.tilt, .sec-tile.tilt, .pstat.tilt { transform: perspective(900px) rotateX(var(--rx, 0)) rotateY(var(--ry, 0)) translateY(-3px); transition: transform .12s ease-out, box-shadow .3s, border-color .2s; }
+  .tilt::after { opacity: 1; }
+}
+
+/* Medalla grande al conseguir un logro */
+.medal-pop { position: fixed; inset: 0; z-index: 9000; display: grid; place-items: center; background: rgba(8, 14, 32, .45); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); cursor: pointer; animation: mp-bg .3s ease both; }
+.medal-pop.out { animation: mp-bg-out .42s ease both; }
+.mp-in { position: relative; display: grid; justify-items: center; gap: 4px; color: #fff; text-align: center; }
+.mp-in b { font-family: var(--font-display); font-size: 28px; margin-top: 8px; animation: mp-up .5s .35s ease-out both; }
+.mp-in > span:last-child { font-size: 17px; opacity: .9; animation: mp-up .5s .45s ease-out both; }
+.mp-medal { position: relative; width: 190px; height: 190px; display: block; animation: mp-in .75s cubic-bezier(.2, 1.3, .4, 1) both; filter: drop-shadow(0 18px 30px rgba(0, 0, 0, .45)); }
+.mp-medal svg { width: 100%; height: 100%; }
+.mp-shine { position: absolute; left: 18.75%; top: 29.2%; width: 62.5%; height: 62.5%; border-radius: 50%; overflow: hidden; pointer-events: none;
+  background: conic-gradient(from 200deg, transparent 0 20%, rgba(255, 255, 255, .55) 28%, transparent 36% 64%, rgba(255, 255, 255, .3) 72%, transparent 80%); mix-blend-mode: overlay; animation: mp-turn 2.4s linear both; }
+.mp-shine::after { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, .85) 50%, transparent 65%); transform: translateX(-120%); animation: mp-sweep .9s .55s ease-in-out both; mix-blend-mode: soft-light; }
+.mp-rays { position: absolute; left: 50%; top: 95px; width: 420px; height: 420px; margin: -210px 0 0 -210px; border-radius: 50%; pointer-events: none;
+  background: repeating-conic-gradient(color-mix(in srgb, var(--mc) 55%, #fff) 0 6deg, transparent 6deg 22deg); -webkit-mask: radial-gradient(circle, #000 18%, transparent 68%); mask: radial-gradient(circle, #000 18%, transparent 68%); opacity: .55; animation: mp-rays 6s linear infinite, mp-fade .5s ease both; }
+.mp-spark { position: absolute; left: 50%; top: 95px; width: 8px; height: 8px; margin: -4px; border-radius: 2px; background: #fff; box-shadow: 0 0 10px #fff; transform: rotate(var(--a)) translateY(0) scale(0); animation: mp-spark .9s calc(.25s + var(--d)) ease-out both; }
+@keyframes mp-bg { from { opacity: 0; } }
+@keyframes mp-bg-out { to { opacity: 0; } }
+@keyframes mp-in { from { transform: scale(.2) rotate(-25deg); opacity: 0; } 60% { transform: scale(1.08) rotate(4deg); opacity: 1; } }
+@keyframes mp-up { from { opacity: 0; transform: translateY(10px); } }
+@keyframes mp-turn { to { transform: rotate(240deg); } }
+@keyframes mp-sweep { to { transform: translateX(120%); } }
+@keyframes mp-rays { to { transform: rotate(360deg); } }
+@keyframes mp-fade { from { opacity: 0; } }
+@keyframes mp-spark { 0% { transform: rotate(var(--a)) translateY(0) scale(0); opacity: 1; } 70% { opacity: 1; } 100% { transform: rotate(var(--a)) translateY(-130px) scale(1); opacity: 0; } }
+.medal-pop.out .mp-medal { animation: mp-away .42s ease-in both; }
+@keyframes mp-away { to { transform: translateY(35vh) scale(.25); opacity: 0; } }
 /* Reacción al responder en práctica y paso de pregunta deslizando */
 @media (prefers-reduced-motion: no-preference) {
   .qcard.slide-next { animation: q-next .36s cubic-bezier(.2, .8, .2, 1) both; }
@@ -4121,6 +4156,20 @@ function checkBadges() {
   fresh.forEach(b => earned[b.id] = Date.now());
   store.set("badges", earned);
   const b = fresh[0];
+  medalPop(b, () => badgeToast(b, fresh));
+}
+// Medalla grande en el centro con brillo metálico; al terminar (o al tocarla) se guarda y sale el aviso de siempre
+function medalPop(b, done) {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches || document.querySelector(".medal-pop")) return done();
+  const m = document.createElement("div");
+  m.className = "medal-pop"; m.setAttribute("role", "status");
+  m.innerHTML = `<div class="mp-in" style="--mc:${b.c}"><i class="mp-rays"></i><span class="mp-medal">${badgeArt(b)}<i class="mp-shine"></i></span>${[...Array(8)].map((_, i) => `<i class="mp-spark" style="--a:${i * 45 + 20}deg;--d:${(i % 3) * 90}ms"></i>`).join("")}<b>¡Logro conseguido!</b><span>${esc(b.n)}</span></div>`;
+  document.body.appendChild(m);
+  let gone = false;
+  const close = () => { if (gone) return; gone = true; m.classList.add("out"); setTimeout(() => { m.remove(); done(); }, 420); };
+  m.onclick = close; setTimeout(close, 2600);
+}
+function badgeToast(b, fresh) {
   document.querySelector(".toast")?.remove();
   const t = document.createElement("div");
   t.className = "toast"; t.setAttribute("role", "status");
@@ -4166,6 +4215,22 @@ document.addEventListener("keydown", e => {
   else if (e.key === "ArrowRight") move(S, 1);
   else if (e.key === "ArrowLeft") move(S, -1);
 });
+// Tarjetas que se inclinan siguiendo el ratón (solo con ratón y si no se pide menos movimiento)
+if (matchMedia("(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)").matches) {
+  let tl = null;
+  const reset = el => { el.classList.remove("tilt"); el.style.removeProperty("--rx"); el.style.removeProperty("--ry"); };
+  document.addEventListener("pointermove", e => {
+    const el = e.target.closest?.(".topic, .sec-tile, .pstat");
+    if (tl && tl !== el) reset(tl);
+    tl = el; if (!el) return;
+    const r = el.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+    const k = el.classList.contains("topic") ? 7 : 5;
+    el.classList.add("tilt");
+    el.style.setProperty("--rx", `${((.5 - y) * k).toFixed(2)}deg`); el.style.setProperty("--ry", `${((x - .5) * k).toFixed(2)}deg`);
+    el.style.setProperty("--mx", `${(x * 100).toFixed(1)}%`); el.style.setProperty("--my", `${(y * 100).toFixed(1)}%`);
+  }, { passive: true });
+  document.addEventListener("pointerleave", () => { if (tl) reset(tl); tl = null; });
+}
 render();
 // Pantalla de inicio: solo en la app instalada; se va con un fundido cuando la portada ya está pintada
 { const sp = $("#splash"); if (sp) { if (document.documentElement.classList.contains("standalone")) setTimeout(() => { sp.classList.add("out"); setTimeout(() => sp.remove(), 700); }, 750); else sp.remove(); } }
