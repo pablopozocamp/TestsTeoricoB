@@ -365,7 +365,7 @@ body { font-size: 16.5px; }
 
 /* Portada: franja azul de señal de indicación, a sangre */
 main.wrap { padding-top: 0; }
-main.wrap > :first-child:not(.hero-band) { margin-top: 32px; }
+main.wrap > :first-child:not(.hero-band):not(.ph-band) { margin-top: 32px; }
 .hero-band { position: relative; background: var(--band); color: var(--band-fg);
   box-shadow: 0 0 0 100vmax var(--band); clip-path: inset(0 -100vmax); padding-block: 48px 64px; border-bottom: 0; margin-bottom: 8px; }
 .hero-band::after { content: ""; position: absolute; left: -100vmax; right: -100vmax; bottom: 22px; height: 6px;
@@ -1164,6 +1164,52 @@ svg:not(.qimg svg, #modal svg, #lightbox svg) * { animation: none !important; }
 .pstat span { font-weight: 600; color: var(--muted); font-size: 14px; }
 .pstat small { font-size: 13px; color: var(--muted); margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--line); }
 .link-danger { text-align: left; }
+/* Mapa del banco */
+.bmap { display: grid; gap: 14px; }
+.bmap-key { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 14px; color: var(--muted); }
+.bmap-key i, .bmap-dots i { display: inline-block; width: 11px; height: 11px; border-radius: 3px; background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line); }
+.bmap-key i { margin-right: 6px; vertical-align: -1px; }
+.bmap-key b { color: var(--fg); margin-left: 2px; }
+.bmap i.ok { background: var(--ok); box-shadow: none; }
+.bmap i.bad { background: var(--bad); box-shadow: none; }
+.bmap-h { display: flex; align-items: center; gap: 6px; font-size: 14px; margin-bottom: 6px; }
+.bmap-h span { margin-left: auto; color: var(--muted); font-size: 13px; }
+.bmap-dots { display: flex; flex-wrap: wrap; gap: 3px; }
+.bmap-dots i { cursor: pointer; transition: transform .12s; }
+.bmap-dots i:hover { transform: scale(1.6); position: relative; z-index: 1; }
+@media (max-width: 720px) { .bmap-dots { gap: 2.5px; } .bmap-dots i { width: 10px; height: 10px; } }
+@media (prefers-reduced-motion: no-preference) { #map-zone:not([hidden]) .bmap-dots i { animation: bm-in .4s ease both; } @keyframes bm-in { from { opacity: 0; transform: scale(.3); } } }
+
+/* Cabeceras ilustradas de las secciones */
+.page-head.ph-band { position: relative; isolation: isolate; color: #fff; border-bottom: 0; padding: 34px 180px 40px 0; margin-bottom: 30px; min-height: 150px; }
+.page-head.ph-band::before { content: ""; position: absolute; inset: 0 -100vmax; z-index: -1;
+  background: radial-gradient(420px 260px at 80% 20%, var(--hglow, rgba(120, 170, 255, .35)), transparent 70%), linear-gradient(160deg, var(--hb1) 0%, var(--hb2) 55%, var(--hb3) 100%); }
+.page-head.ph-band::after { content: ""; position: absolute; left: -100vmax; right: -100vmax; bottom: 12px; height: 4px; z-index: -1; background: repeating-linear-gradient(90deg, rgba(255, 255, 255, .42) 0 40px, transparent 40px 70px); }
+:root[data-theme="dark"] .page-head.ph-band::before { filter: brightness(.82); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .page-head.ph-band::before { filter: brightness(.82); } }
+.ph-band .eyebrow { display: inline-flex; padding: 4px 11px; border-radius: 999px; background: rgba(255, 255, 255, .12); border: 1px solid rgba(255, 255, 255, .2); color: #dbe8ff; }
+.ph-band h1 { color: #fff; margin-top: 8px; }
+.ph-band .lead { color: rgba(235, 242, 255, .86); }
+.ph-band .btn { background: rgba(255, 255, 255, .08); color: #fff; border-color: rgba(255, 255, 255, .45); }
+.ph-band .btn:hover:not(:disabled) { background: rgba(255, 255, 255, .16); border-color: #fff; }
+.ph-band .btn-primary { background: #fff; color: var(--hb2); border-color: #fff; }
+.ph-band.section-head { padding-right: 0; }
+.ph-band.section-head .ph-pic { display: none; }
+.ph-pic { position: absolute; right: 8px; top: 50%; width: 132px; height: 132px; margin-top: -72px; border-radius: 32px; display: grid; place-items: center; transform: rotate(-6deg);
+  background: rgba(255, 255, 255, .1); border: 1px solid rgba(255, 255, 255, .22); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .25), 0 20px 40px -18px rgba(0, 0, 20, .55); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.ph-pic svg { width: 86px; height: 86px; filter: drop-shadow(0 6px 10px rgba(0, 0, 30, .35)); }
+.ph-pic svg { --surface: #f4f7ff; --fg: #1b2440; }
+@media (prefers-reduced-motion: no-preference) { .ph-pic { animation: ph-in .6s cubic-bezier(.2, .9, .3, 1.2) both; } @keyframes ph-in { from { opacity: 0; transform: rotate(-16deg) scale(.7); } } }
+@media (max-width: 720px) { .page-head.ph-band { padding: 26px 96px 34px 0; min-height: 0; } .ph-pic { width: 78px; height: 78px; margin-top: -46px; border-radius: 20px; right: 0; } .ph-pic svg { width: 50px; height: 50px; } }
+
+/* Iconos de la barra inferior: salto al tocar y relleno en la sección actual */
+@media (max-width: 720px) {
+  .top-nav a[aria-current="page"] .nav-ico { fill: color-mix(in srgb, currentColor 18%, transparent); }
+  @media (prefers-reduced-motion: no-preference) {
+    .top-nav a.tap .nav-ico { animation: nav-pop .45s cubic-bezier(.3, 1.6, .5, 1); }
+    @keyframes nav-pop { 0% { transform: none; } 35% { transform: scale(.78) translateY(2px); } 70% { transform: scale(1.18) translateY(-4px); } 100% { transform: none; } }
+  }
+}
 /* Quién pasa primero */
 .qp { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
 @media (max-width: 820px) { .qp { grid-template-columns: 1fr; } }
@@ -2860,6 +2906,7 @@ function home() {
     ${chanceHTML()}
   </section>
   <section class="section" id="cal-zone">${calendarHTML()}</section>
+  <section class="section" id="map-zone">${bankMapHTML()}</section>
   <section class="section">
     <div class="section-head"><h2>Tu nivel frente al aprobado</h2><p>Para aprobar hay que acertar al menos el 90 %</p></div>
     ${levelHTML()}
@@ -3473,6 +3520,13 @@ function prioView() {
     $("#qp-next").focus({ preventScroll: true });
     if (matchMedia("(max-width: 820px)").matches) app.querySelector(".qp-side .explain")?.scrollIntoView({ behavior: "smooth", block: "center" });
   }
+}
+// Un punto por pregunta del banco, agrupado por tema: verde acertada, rojo fallada, gris sin ver
+function bankMapHTML() {
+  const ok = Q.filter(q => seen[q.id] === 1).length, bad = Q.filter(q => seen[q.id] === 0).length;
+  return `<div class="section-head"><h2>Mapa del banco</h2><p>${Q.length} preguntas · toca un punto para hacer esa pregunta</p></div>
+  <div class="card bmap"><div class="bmap-key"><span><i class="ok"></i>Acertadas <b>${ok}</b></span><span><i class="bad"></i>Falladas <b>${bad}</b></span><span><i></i>Sin ver <b>${Q.length - ok - bad}</b></span></div>
+  ${Object.entries(TEMAS).map(([k, t]) => { const qs = Q.filter(q => q.t === k); return `<div class="bmap-row"><div class="bmap-h">${tdot(k)}<b>${t.n}</b><span>${qs.filter(q => seen[q.id] === 1).length}/${qs.length}</span></div><div class="bmap-dots">${qs.map(q => `<i class="${seen[q.id] === 1 ? "ok" : seen[q.id] === 0 ? "bad" : ""}" data-qm="${q.id}" title="${esc(q.q.length > 90 ? q.q.slice(0, 88) + "…" : q.q)}"></i>`).join("")}</div></div>`; }).join("")}</div>`;
 }
 function guideView() {
   const done = new Set(store.get("bring", []));
@@ -4468,6 +4522,14 @@ function badgeToast(b, fresh) {
 }
 
 /* ====================== Navegación ====================== */
+// Franja dibujada en la cabecera de cada sección, con el dibujo de la sección a la derecha
+const HEAD_PIC = { senales: "senales", chuleta: "chuleta", fallos: "fallos", fichas: "fichas", guia: "guia", buscar: "buscar", examen: "examen", prioridad: "prioridad" };
+function decorateHead(r) {
+  const h = app.firstElementChild?.classList.contains("page-head") ? app.firstElementChild : null;
+  if (!h || !HEAD_PIC[r] || !PIC[HEAD_PIC[r]]) return;
+  h.classList.add("ph-band");
+  h.insertAdjacentHTML("beforeend", `<span class="ph-pic" aria-hidden="true">${PIC[HEAD_PIC[r]]}</span>`);
+}
 let enterT;
 function render() {
   const r = route(); syncFocus(); document.body.classList.remove("inq");
@@ -4484,6 +4546,7 @@ function render() {
   else if (r === "buscar") searchView();
   else if (r === "perfil") profileView();
   else home();
+  decorateHead(r);
   window.scrollTo(0, 0);
   checkBadges(); paintFailBadge();
 }
@@ -4504,6 +4567,16 @@ document.addEventListener("keydown", e => {
   else if (k === "M" && S.mode === "exam" && !S.done && S.kind !== "real") toggleFlag(S);
   else if (e.key === "ArrowRight") move(S, 1);
   else if (e.key === "ArrowLeft") move(S, -1);
+});
+document.addEventListener("click", e => {
+  const d = e.target.closest?.("[data-qm]"); if (!d) return;
+  const q = Q.find(x => x.id === +d.dataset.qm); if (q) startPractice([q], `Pregunta del mapa · ${TEMAS[q.t].n}`);
+});
+// Iconos de la barra inferior: pequeño salto al tocarlos
+document.addEventListener("click", e => {
+  const a = e.target.closest?.(".top-nav a"); if (!a) return;
+  a.classList.remove("tap"); void a.offsetWidth; a.classList.add("tap");
+  setTimeout(() => a.classList.remove("tap"), 500);
 });
 // Tarjetas que se inclinan siguiendo el ratón (solo con ratón y si no se pide menos movimiento)
 if (matchMedia("(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)").matches) {
