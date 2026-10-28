@@ -1162,7 +1162,94 @@ svg:not(.qimg svg, #modal svg, #lightbox svg) * { animation: none !important; }
 .pstat span { font-weight: 600; color: var(--muted); font-size: 14px; }
 .pstat small { font-size: 13px; color: var(--muted); margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--line); }
 .link-danger { text-align: left; }
+/* Reacción al responder en práctica y paso de pregunta deslizando */
+@media (prefers-reduced-motion: no-preference) {
+  .qcard.slide-next { animation: q-next .36s cubic-bezier(.2, .8, .2, 1) both; }
+  .qcard.slide-prev { animation: q-prev .36s cubic-bezier(.2, .8, .2, 1) both; }
+  @keyframes q-next { from { opacity: 0; transform: translateX(44px) scale(.985); } }
+  @keyframes q-prev { from { opacity: 0; transform: translateX(-44px) scale(.985); } }
+  .qcard.react-bad { animation: q-shake .46s cubic-bezier(.36, .07, .19, .97); }
+  @keyframes q-shake { 15% { transform: translateX(-7px); } 30% { transform: translateX(6px); } 45% { transform: translateX(-4px); } 60% { transform: translateX(3px); } 75% { transform: translateX(-1px); } }
+  .opt.pop { position: relative; overflow: hidden; animation: ok-pop .55s cubic-bezier(.2, .9, .3, 1.3); }
+  .qcard.react-bad .opt.pop { animation-delay: .4s; animation-fill-mode: both; }
+  .opt.pop::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, .5) 50%, transparent 70%); transform: translateX(-110%); animation: ok-sheen .9s .12s ease-out forwards; }
+  .qcard.react-bad .opt.pop::after { animation-delay: .5s; }
+  @keyframes ok-pop { 45% { transform: scale(1.025); box-shadow: 0 0 0 9px color-mix(in srgb, var(--ok) 22%, transparent); } }
+  @keyframes ok-sheen { to { transform: translateX(110%); } }
+}
+:root[data-theme="dark"] .opt.pop::after { background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, .16) 50%, transparent 70%); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .opt.pop::after { background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, .16) 50%, transparent 70%); } }
+
+/* Resultado del examen con aspecto de carné */
+.lic { position: relative; width: 350px; max-width: 100%; aspect-ratio: 1.586; border-radius: 18px; padding: 16px 18px; color: #1b2440; overflow: hidden; display: grid; grid-template-rows: auto 1fr; gap: 10px; font-family: var(--font-body);
+  background: repeating-radial-gradient(circle at 85% 115%, transparent 0 7px, rgba(255, 255, 255, .28) 7px 8px), radial-gradient(circle at 10% 0%, rgba(255, 255, 255, .7), transparent 50%), linear-gradient(135deg, #f3d3df 0%, #e7e3f4 50%, #d4e9f1 100%);
+  box-shadow: 0 22px 44px -20px rgba(10, 20, 50, .5), inset 0 0 0 1px rgba(255, 255, 255, .6); }
+.lic-top { display: flex; align-items: center; gap: 10px; padding-bottom: 8px; border-bottom: 1px solid rgba(27, 36, 64, .14); }
+.lic-top b { display: block; font-family: var(--font-display); font-size: 18px; line-height: 1.1; }
+.lic-top small { font-size: 11px; letter-spacing: .05em; text-transform: uppercase; color: #4a5574; }
+.lic-b { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; background: var(--accent); color: #fff; font-family: var(--font-display); font-weight: 700; font-size: 20px; box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .15); }
+.lic-body { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 14px; align-items: start; }
+.lic-photo { width: 74px; height: 92px; border-radius: 10px; display: grid; place-items: center; background: linear-gradient(160deg, #c9d3ea, #a9b7d8); color: #26325a; font-family: var(--font-display); font-weight: 700; font-size: 26px; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .6); }
+.lic-photo svg { width: 46%; height: 46%; }
+.lic dl { margin: 0; display: grid; gap: 3px; }
+.lic dl div { display: flex; gap: 8px; align-items: baseline; min-width: 0; }
+.lic dt { font-size: 10.5px; color: #5a6584; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+.lic dt i { font-style: normal; font-weight: 700; color: #7a84a2; }
+.lic dd { margin: 0; font-weight: 700; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lic-stamp { position: absolute; right: 16px; bottom: 14px; padding: 4px 12px; border: 3px solid currentColor; border-radius: 10px; font-family: var(--font-display); font-weight: 700; font-size: 26px; letter-spacing: .06em; transform: rotate(-11deg); background: rgba(255, 255, 255, .35); box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .5); }
+.lic.ok .lic-stamp { color: #13804a; }
+.lic.bad .lic-stamp { color: #c2262e; }
+@media (prefers-reduced-motion: no-preference) {
+  .lic { animation: lic-in .6s cubic-bezier(.2, .9, .3, 1.15) both; }
+  .lic-stamp { animation: stamp-in .42s .5s cubic-bezier(.3, 1.4, .5, 1) both; }
+  @keyframes lic-in { from { opacity: 0; transform: translateY(16px) rotate(-3deg) scale(.94); } }
+  @keyframes stamp-in { from { opacity: 0; transform: rotate(-11deg) scale(2.2); } }
+}
+@media (max-width: 600px) { .lic { width: 100%; } .lic-stamp { font-size: 18px; right: 12px; bottom: 12px; padding: 3px 9px; border-width: 2.5px; } }
+
+/* Temas con más color y dibujo más grande */
+.topic.tc { background: linear-gradient(135deg, color-mix(in srgb, var(--tc) 15%, var(--surface)) 0%, color-mix(in srgb, var(--tc) 4%, var(--surface)) 55%, var(--surface) 100%); border-color: color-mix(in srgb, var(--tc) 28%, var(--line)); }
+.topic.tc:hover { box-shadow: 0 14px 30px -16px color-mix(in srgb, var(--tc) 60%, transparent); }
+.topic { grid-template-columns: 84px minmax(0, 1fr); }
+.tring { width: 84px; height: 84px; }
+.tring > span { width: 76px; height: 76px; }
+.topic .tring svg { width: 72px; height: 72px; padding: 8px; }
+.topic .topic-foot { border-top-color: color-mix(in srgb, var(--tc) 22%, var(--line)); }
+
+/* Pantalla de inicio de la app instalada */
+#splash { display: none; }
+html.standalone #splash { display: grid; position: fixed; inset: 0; z-index: 9999; place-items: center; color: #fff;
+  background: radial-gradient(500px 360px at 70% 20%, var(--hglow, rgba(120, 170, 255, .35)), transparent 70%), linear-gradient(160deg, var(--hb1, #1f4fa3), var(--hb2, #133a80) 55%, var(--hb3, #0b2457)); transition: opacity .55s ease, visibility .55s; }
+#splash.out { opacity: 0; visibility: hidden; }
+.sp-in { display: grid; justify-items: center; gap: 6px; text-align: center; }
+.sp-mark { width: 92px; height: 92px; border-radius: 24px; display: grid; place-items: center; background: #fff; color: var(--hb2, #133a80); font-family: var(--font-display); font-weight: 700; font-size: 56px; box-shadow: 0 20px 50px -16px rgba(0, 0, 0, .5); margin-bottom: 12px; }
+.sp-in b { font-family: var(--font-display); font-size: 26px; }
+.sp-in small { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; opacity: .75; }
+.sp-bar { width: 120px; height: 3px; border-radius: 3px; margin-top: 18px; background: rgba(255, 255, 255, .2); overflow: hidden; position: relative; }
+.sp-bar::after { content: ""; position: absolute; inset: 0; background: #fff; transform-origin: left; animation: sp-load .75s ease-out both; }
+@media (prefers-reduced-motion: no-preference) {
+  .sp-mark { animation: sp-pop .6s cubic-bezier(.2, .9, .3, 1.3) both; }
+  .sp-in b, .sp-in small { animation: sp-up .5s .18s ease-out both; }
+  #splash.out .sp-in { transform: scale(1.06); transition: transform .55s ease; }
+  @keyframes sp-pop { from { opacity: 0; transform: scale(.6); } }
+  @keyframes sp-up { from { opacity: 0; transform: translateY(8px); } }
+}
+@keyframes sp-load { from { transform: scaleX(0); } }
+
+/* Mi perfil con portada */
+.me-card.cover { padding-top: 0; overflow: hidden; align-items: start; }
+.me-band { grid-column: 1 / -1; height: 120px; margin: 0 -24px; position: relative;
+  background: radial-gradient(420px 220px at 80% 10%, var(--hglow, rgba(120, 170, 255, .35)), transparent 70%), linear-gradient(160deg, var(--hb1) 0%, var(--hb2) 55%, var(--hb3) 100%); }
+.me-band::after { content: ""; position: absolute; left: 0; right: 0; bottom: 18px; height: 4px; background: repeating-linear-gradient(90deg, rgba(255, 255, 255, .45) 0 34px, transparent 34px 60px); }
+.me-card.cover .avatar.xl { width: 104px; height: 104px; font-size: 36px; margin-top: -60px; box-shadow: 0 0 0 5px var(--surface), 0 14px 30px -12px rgba(5, 15, 40, .5); position: relative; }
+.me-card.cover .me-info { padding-top: 4px; }
+.me-card.cover .me-actions { align-self: center; }
+.me-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 6px; }
+.me-chips span { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; font-size: 13px; font-weight: 600; background: var(--accent-soft); color: var(--accent); }
+.me-chips svg { width: 14px; height: 14px; }
+@media (max-width: 720px) { .me-card.cover .avatar.xl { width: 88px; height: 88px; font-size: 30px; margin-top: -48px; } .me-band { height: 96px; } }
 </style>
+<script>if (matchMedia("(display-mode: standalone)").matches || navigator.standalone) document.documentElement.classList.add("standalone");</script>
 <style>body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
 </head>
 <body>
@@ -1187,6 +1274,7 @@ svg:not(.qimg svg, #modal svg, #lightbox svg) * { animation: none !important; }
   </div>
 </header>
 
+<div id="splash" aria-hidden="true"><div class="sp-in"><span class="sp-mark">B</span><b>Test Teórico</b><small>Permiso de conducir B</small><i class="sp-bar"></i></div></div>
 <main class="wrap" id="app"></main>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><filter id="lg-refract" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="0.006 0.018" numOctaves="2" seed="7" result="n"/><feGaussianBlur in="n" stdDeviation="2.5" result="nb"/><feDisplacementMap in="SourceGraphic" in2="nb" scale="22" xChannelSelector="R" yChannelSelector="G"/></filter></svg>
 <dialog class="modal" id="modal"><div class="modal-in" id="modal-in"></div></dialog>
@@ -3369,7 +3457,7 @@ function renderQ(S) {
   <div class="legend" aria-hidden="true">${isExam && !S.done
     ? `<span><i class="answered"></i>Contestada</span><span><i></i>Sin contestar</span><span class="lg-flag"><i class="flag"></i>Marcada</span>`
     : `<span><i class="r-ok"></i>Acertada</span><span><i class="r-bad"></i>Fallada</span><span><i></i>Sin contestar</span>`}<span><i class="current"></i>Pregunta actual</span></div>` : ""}
-  <article class="qcard ${S.shown === S.i ? "" : "fade"} ${q.img ? "" : "noimg"}">
+  <article class="qcard ${S.shown === S.i ? "" : S.dir > 0 ? "slide-next" : S.dir < 0 ? "slide-prev" : "fade"} ${q.img ? "" : "noimg"}${S.justAnswered === S.i && S.mode === "practice" ? (chosen === q.a ? " react-ok" : " react-bad") : ""}">
     ${q.img ? `<figure class="qimg" data-zoom="${esc(q.img)}" title="Toca para ampliar">${imgHTML(q.img)}<figcaption>Ilustración propia</figcaption><button class="zoom-btn" aria-label="Ampliar imagen">${ICON.zoom}</button></figure>` : ""}
     <div class="qbody">
       <div class="qmeta"><span>Pregunta ${S.i + 1} de ${S.qs.length}</span><span class="tema" style="--tc:var(--t-${q.t})">${TEMAS[q.t].n}</span>${S.flags.has(S.i) && !S.done ? `<span>·</span><span class="flagged">Marcada para revisar</span>` : ""}</div>
@@ -3381,7 +3469,7 @@ function renderQ(S) {
           else if (k === chosen) cls = "sel";
           const mk = cls === "right" ? `<span class="mk" aria-label="${k === chosen ? "Correcta, tu respuesta" : "Respuesta correcta"}">${ICON.check2}</span>` : cls === "wrong" ? `<span class="mk" aria-label="Tu respuesta, incorrecta">${ICON.cross2}</span>` : "";
           const tagT = reveal && k === chosen ? `<small class="yours">Tu respuesta</small>` : "";
-          return `<button class="opt ${cls}${mk ? " has-mk" : ""}" role="radio" aria-checked="${k === chosen}" data-opt="${k}" id="opt-${k}" ${reveal ? "disabled" : ""}><span class="l">${L[k]}</span><span>${esc(o)}${tagT}</span>${mk}</button>`;
+          return `<button class="opt ${cls}${mk ? " has-mk" : ""}${cls === "right" && S.justAnswered === S.i ? " pop" : ""}" role="radio" aria-checked="${k === chosen}" data-opt="${k}" id="opt-${k}" ${reveal ? "disabled" : ""}><span class="l">${L[k]}</span><span>${esc(o)}${tagT}</span>${mk}</button>`;
         }).join("")}
       </div>
       ${!reveal && S.mode === "practice" && S.hint === S.i ? `<div class="hint" role="status"><b>Recuerda</b>${esc(hintFor(q))}</div>` : ""}
@@ -3400,7 +3488,7 @@ function renderQ(S) {
     </div>
   </div>
   <p class="hints"><span><span class="kbd">A</span> <span class="kbd">B</span> <span class="kbd">C</span> responder</span><span><span class="kbd">←</span> <span class="kbd">→</span> anterior y siguiente</span>${isExam && !S.done ? `<span><span class="kbd">M</span> marcar para revisar</span>` : ""}</p>`;
-  document.querySelectorAll("[data-go]").forEach(b => b.onclick = () => { S.i = +b.dataset.go; renderQ(S); });
+  document.querySelectorAll("[data-go]").forEach(b => b.onclick = () => { S.dir = Math.sign(+b.dataset.go - S.i); S.i = +b.dataset.go; renderQ(S); });
   document.querySelectorAll("[data-opt]").forEach(b => b.onclick = () => choose(S, +b.dataset.opt));
   $("#prev").onclick = () => move(S, -1);
   const n = $("#next"); if (n) n.onclick = () => move(S, 1);
@@ -3409,7 +3497,7 @@ function renderQ(S) {
   const f = $("#finish"); if (f) f.onclick = () => isExam ? confirmFinish(S) : finishPractice(S);
   const r = $("#to-result"); if (r) r.onclick = () => resultView(S);
   if (reveal && !S.done) { const nx = $("#next:not(:disabled)") || $("#finish"); nx && nx.focus({ preventScroll: true }); }
-  document.body.classList.add("inq"); S.shown = S.i;
+  document.body.classList.add("inq"); S.shown = S.i; S.dir = 0;
   const cur = app.querySelector(".grid-nav .current"); if (cur) { const g = cur.parentElement; g.scrollLeft = cur.offsetLeft - g.clientWidth / 2 + cur.clientWidth / 2; }
   const ex = app.querySelector(".explain");
   if (ex && S.mode === "practice" && !S.done && S.justAnswered === S.i && matchMedia("(max-width: 720px)").matches) {
@@ -3426,7 +3514,7 @@ function renderQ(S) {
     }, { passive: true });
   }
 }
-function move(S, d) { const j = S.i + d; if (j < 0 || j >= S.qs.length) return; S.i = j; renderQ(S); if (matchMedia("(max-width: 720px)").matches) window.scrollTo(0, 0); }
+function move(S, d) { const j = S.i + d; if (j < 0 || j >= S.qs.length) return; S.i = j; S.dir = d; renderQ(S); if (matchMedia("(max-width: 720px)").matches) window.scrollTo(0, 0); }
 function toggleFlag(S) { S.flags.has(S.i) ? S.flags.delete(S.i) : S.flags.add(S.i); renderQ(S); }
 
 // Vibración corta al acertar y doble al fallar (solo navegadores que la permiten, como Chrome en Android)
@@ -3442,7 +3530,7 @@ function choose(S, k) {
     if (S !== EX || S.done || S.i !== from || S.view !== "q" || route() !== "examen") return;
     let next = S.qs.findIndex((_, j) => j > S.i && S.ans[j] === undefined);
     if (next === -1) next = S.qs.findIndex((_, j) => S.ans[j] === undefined);
-    if (next !== -1) { S.i = next; renderQ(S); }
+    if (next !== -1) { S.dir = 1; S.i = next; renderQ(S); }
   }, 380);
 }
 
@@ -3523,6 +3611,17 @@ async function shareResult(S, ok) {
   const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = file.name; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 5000);
 }
+// Tarjeta del resultado con aspecto de carné (dibujo propio, sin escudos ni datos oficiales)
+function licHTML(S, ok, pass) {
+  const n = who(), bad = S.qs.length - ok;
+  const f = (k, l, v) => `<div><dt><i>${k}.</i> ${l}</dt><dd>${v}</dd></div>`;
+  return `<div class="lic ${pass ? "ok" : "bad"}" role="img" aria-label="${pass ? "Apto" : "No apto"}: ${ok} de ${S.qs.length} aciertos">
+    <div class="lic-top"><span class="lic-b">B</span><div><b>Test Teórico</b><small>Simulacro de examen · Permiso B</small></div></div>
+    <div class="lic-body"><span class="lic-photo">${n ? esc(initials(n)) : ICON.user}</span>
+      <dl>${f(1, "Nombre", n ? esc(n.split(" ").slice(0, 2).join(" ")) : "Sin nombre")}${f(2, "Fecha", new Date().toLocaleDateString("es-ES"))}${f(3, "Aciertos", `${ok}/${S.qs.length}`)}${f(4, "Fallos", bad)}${S.secs ? f(5, "Tiempo", fmt(S.secs * 1000)) : ""}</dl></div>
+    <span class="lic-stamp">${pass ? "APTO" : "NO APTO"}</span>
+  </div>`;
+}
 function resultView(S) {
   document.body.classList.remove("inq");
   S.view = "result"; syncFocus(); setTimeout(checkBadges);
@@ -3532,7 +3631,7 @@ function resultView(S) {
   const topics = Object.keys(TEMAS).map(k => { const idx = S.qs.map((_, j) => j).filter(j => S.qs[j].t === k); return { k, n: idx.length, ok: idx.filter(j => S.ans[j] === S.qs[j].a).length }; }).filter(t => t.n);
   app.innerHTML = `
   <div class="result">
-    ${isExam ? `<div class="verdict ${pass ? "ok" : "bad"}">${pass ? "APTO" : "NO APTO"}<small>${ok}/${S.qs.length} aciertos</small></div>` : `<div class="verdict ${bad <= 2 ? "ok" : "bad"}">${ok}/${S.qs.length}<small>aciertos</small></div>`}
+    ${isExam ? licHTML(S, ok, pass) : `<div class="verdict ${bad <= 2 ? "ok" : "bad"}">${ok}/${S.qs.length}<small>aciertos</small></div>`}
     <div>
       <h2>${isExam ? (pass ? (bad ? `Aprobado con ${plural(bad, "fallo", "fallos")}` : "Aprobado sin fallos") : `Suspendido con ${bad} fallos`) : `${esc(S.title)}: ${plural(ok, "acierto", "aciertos")}`}</h2>
       ${who() ? `<p class="who">Alumno: <b>${esc(who())}</b> · ${new Date().toLocaleString("es-ES", { dateStyle: "long", timeStyle: "short" })}</p>` : ""}
@@ -3876,10 +3975,12 @@ function profileView() {
   const tile = (v, l, sub = "") => `<div class="pstat"><b>${v}</b><span>${l}</span>${sub ? `<small>${sub}</small>` : ""}</div>`;
   app.innerHTML = `
   <div class="page-head"><div class="eyebrow">Tu cuenta</div><h1>Mi perfil</h1></div>
-  <section class="card me-card">
+  <section class="card me-card cover">
+    <div class="me-band" aria-hidden="true"></div>
     <span class="avatar xl">${name ? esc(initials(name)) : ICON.user}</span>
     <div class="me-info"><h2>${name ? esc(name) : "Sin iniciar sesión"}</h2>
       <p>${name ? `<span class="sync-txt ${syncState}">${SYNC_TXT[syncState] || "Sesión iniciada"}</span>` : "Tu progreso solo está en este navegador. Inicia sesión con tu nombre para guardarlo y recuperarlo en otros navegadores."}</p>
+      <div class="me-chips"><span>${ICON.check2}${rd ? rd.label : "Sin nivel todavía"}</span><span>${plural(streakDays(), "día", "días")} de racha</span><span>${got}/${BADGES.length} logros</span></div>
       ${first ? `<p class="muted">Estudiando desde el ${first.toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" })}</p>` : ""}</div>
     <div class="btn-row me-actions">${name ? `<button class="btn" id="me-set">Ajustes</button><button class="btn" id="me-out">Cerrar sesión</button>` : `<button class="btn btn-primary" id="me-in">Iniciar sesión</button><button class="btn" id="me-set">Ajustes</button>`}</div>
   </section>
@@ -4066,6 +4167,8 @@ document.addEventListener("keydown", e => {
   else if (e.key === "ArrowLeft") move(S, -1);
 });
 render();
+// Pantalla de inicio: solo en la app instalada; se va con un fundido cuando la portada ya está pintada
+{ const sp = $("#splash"); if (sp) { if (document.documentElement.classList.contains("standalone")) setTimeout(() => { sp.classList.add("out"); setTimeout(() => sp.remove(), 700); }, 750); else sp.remove(); } }
 </script>
 <script>if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) navigator.serviceWorker.register("sw.js");</script>
 </body>
