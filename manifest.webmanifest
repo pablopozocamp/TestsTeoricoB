@@ -21,5 +21,55 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
+  ],
+  "shortcuts": [
+    {
+      "name": "Examen rápido",
+      "short_name": "Examen",
+      "url": "./?go=exam",
+      "icons": [
+        {
+          "src": "sc-examen.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Mis fallos",
+      "short_name": "Fallos",
+      "url": "./#fallos",
+      "icons": [
+        {
+          "src": "sc-fallos.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Chuleta de números",
+      "short_name": "Chuleta",
+      "url": "./#chuleta",
+      "icons": [
+        {
+          "src": "sc-chuleta.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Ruta por la ciudad",
+      "short_name": "Ruta",
+      "url": "./#ruta",
+      "icons": [
+        {
+          "src": "sc-ruta.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
   ]
 }
