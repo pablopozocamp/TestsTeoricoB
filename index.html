@@ -1164,6 +1164,25 @@ svg:not(.qimg svg, #modal svg, #lightbox svg) * { animation: none !important; }
 .pstat span { font-weight: 600; color: var(--muted); font-size: 14px; }
 .pstat small { font-size: 13px; color: var(--muted); margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--line); }
 .link-danger { text-align: left; }
+/* Reloj del examen con semáforo: verde, ámbar con menos de 5 minutos y rojo en el último minuto */
+.tlight { display: inline-flex; gap: 3px; padding: 4px 5px; border-radius: 999px; background: #1b2233; box-shadow: inset 0 1px 2px rgba(0, 0, 0, .5), 0 1px 0 rgba(255, 255, 255, .08); flex: none; }
+.tlight i { width: 8px; height: 8px; border-radius: 50%; background: #3a4256; transition: background .4s, box-shadow .4s; }
+.timer:not(.low):not(.crit) .tlight .g { background: #2fd17a; box-shadow: 0 0 6px 1px rgba(47, 209, 122, .7); }
+.timer.low .tlight .a { background: #ffb020; box-shadow: 0 0 6px 1px rgba(255, 176, 32, .75); }
+.timer.crit .tlight .r { background: #ff3b3b; box-shadow: 0 0 7px 1px rgba(255, 59, 59, .8); }
+@media (prefers-reduced-motion: no-preference) { .timer.crit .tlight .r { animation: tl-blink 1s steps(2, start) infinite; } @keyframes tl-blink { 50% { background: #7a2020; box-shadow: none; } } }
+body.inq .tlight i { width: 7px; height: 7px; }
+
+/* Transición al abrir un tema */
+::view-transition-group(tema) { animation-duration: .5s; animation-timing-function: cubic-bezier(.2, .8, .2, 1); overflow: hidden; border-radius: 20px; background: var(--surface); box-shadow: 0 24px 60px -20px rgba(10, 20, 50, .45); }
+::view-transition-image-pair(tema) { isolation: auto; }
+::view-transition-old(tema), ::view-transition-new(tema) { width: auto; height: auto; object-fit: none; object-position: left top; mix-blend-mode: normal; inset: 0 auto auto 0; }
+::view-transition-old(tema) { animation: vt-out .18s ease both; }
+::view-transition-new(tema) { animation: vt-in .3s .15s ease both; }
+::view-transition-old(root) { animation: vt-out .25s ease both; }
+::view-transition-new(root) { animation: vt-in .3s .15s ease both; }
+@keyframes vt-out { to { opacity: 0; } }
+@keyframes vt-in { from { opacity: 0; } }
 /* Vista previa animada en la página del examen */
 .intro { grid-template-areas: "how opts" "pv opts"; }
 .intro-how { grid-area: how; } .intro-opts { grid-area: opts; } .pv-card { grid-area: pv; }
@@ -2840,7 +2859,7 @@ function home() {
   $("#start-mix").onclick = () => startPractice(shuffle(Q).slice(0, 10), "Práctica rápida");
   bindPlan(); bindStreak(); drawCharts(); bindTypes(); paintNext(); bindHTabs();
   const gn = $("#go-night"); if (gn) gn.onclick = () => startPractice(shuffle(todayFails()).slice(0, 10), "Repaso antes de dormir");
-  document.querySelectorAll("[data-topic]").forEach(b => b.onclick = () => startPractice(shuffle(Q.filter(q => q.t === b.dataset.topic)), TEMAS[b.dataset.topic].n));
+  document.querySelectorAll("[data-topic]").forEach(b => b.onclick = () => morphTo(b, () => startPractice(shuffle(Q.filter(q => q.t === b.dataset.topic)), TEMAS[b.dataset.topic].n)));
 }
 
 
@@ -3575,6 +3594,19 @@ function startExam(kind = "simulado") {
   EX = { mode: "exam", kind, diff, title: (kind === "refuerzo" ? "Examen de refuerzo" : kind === "real" ? "Simulacro realista" : "Examen simulado") + (diff !== "normal" ? ` · ${DIFF[diff].n}` : ""), qs: pool.map(mix), ans: {}, flags: new Set(), i: 0, done: false, view: "q", start: Date.now(), end: Date.now() + EXAM_MIN * 60000 };
   go("examen");
 }
+// Transición: la tarjeta pulsada crece hasta convertirse en la tarjeta de la pregunta (si el navegador lo permite)
+function morphTo(el, run) {
+  if (!document.startViewTransition || matchMedia("(prefers-reduced-motion: reduce)").matches) return run();
+  el.style.viewTransitionName = "tema";
+  el.style.setProperty("--vt-c", getComputedStyle(el).getPropertyValue("--tc"));
+  const t = document.startViewTransition(() => new Promise(done => {
+    const fin = () => { clearTimeout(to); const c = $(".qcard"); if (c) c.style.viewTransitionName = "tema"; done(); };
+    const to = setTimeout(fin, 400);
+    addEventListener("hashchange", () => setTimeout(fin), { once: true });
+    run();
+  }));
+  t.finished.finally(() => { const c = $(".qcard"); if (c) c.style.viewTransitionName = ""; });
+}
 function startPractice(qs, title) {
   PR = { mode: "practice", title, qs: qs.map(mix), ans: {}, flags: new Set(), i: 0, done: false, view: "q",
     pre: { seen: new Set(Object.keys(seen)), fails: new Set(fails), today: daily[dayKey()] || 0 } };
@@ -3613,7 +3645,7 @@ function renderQ(S) {
     <div><div class="eyebrow">${S.done ? "Revisión" : isExam ? "Examen · Permiso B" : "Práctica"}${who() ? ` · ${esc(who())}` : ""}</div><h2>${esc(S.title)}</h2></div>
     <div class="right">
       <span class="counter">${answered}/${S.qs.length} respondidas</span>
-      ${isExam && !S.done ? `<div class="timer ${timerCls(S.end - Date.now())}" id="timer" aria-label="Tiempo restante"><svg class="ring" viewBox="0 0 36 36" aria-hidden="true"><circle class="rb" cx="18" cy="18" r="15.5"/><circle class="rf" id="timer-ring" cx="18" cy="18" r="15.5" stroke-dasharray="${RING_C}" stroke-dashoffset="${ringOff(S.end - Date.now())}"/></svg><span id="timer-val">${fmt(S.end - Date.now())}</span></div>` : ""}
+      ${isExam && !S.done ? `<div class="timer ${timerCls(S.end - Date.now())}" id="timer" aria-label="Tiempo restante"><span class="tlight" aria-hidden="true"><i class="g"></i><i class="a"></i><i class="r"></i></span><svg class="ring" viewBox="0 0 36 36" aria-hidden="true"><circle class="rb" cx="18" cy="18" r="15.5"/><circle class="rf" id="timer-ring" cx="18" cy="18" r="15.5" stroke-dasharray="${RING_C}" stroke-dashoffset="${ringOff(S.end - Date.now())}"/></svg><span id="timer-val">${fmt(S.end - Date.now())}</span></div>` : ""}
     </div>
   </div>
   ${S.qs.length <= 60 ? `<div class="progress segs" style="--n:${S.qs.length}" role="progressbar" aria-label="Preguntas respondidas" aria-valuemin="0" aria-valuemax="${S.qs.length}" aria-valuenow="${answered}">${S.qs.map((q, j) => `<i class="${S.ans[j] === undefined ? "" : S.done || !isExam ? (S.ans[j] === q.a ? "ok" : "bad") : "on"}${j === S.i ? " cur" : ""}"></i>`).join("")}</div>`
