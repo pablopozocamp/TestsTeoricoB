@@ -1264,6 +1264,21 @@ svg:not(.qimg svg, #modal svg, #lightbox svg) * { animation: none !important; }
 .rt-list i { font-style: normal; flex: none; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: 12px; font-weight: 700; background: var(--ok); }
 .rt-list li.bad i { background: var(--bad); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+/* Velocidades al momento */
+.sp-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 10px; }
+.sp-chips button { font: inherit; font-size: 14px; padding: 7px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); cursor: pointer; transition: border-color .15s, background .15s; }
+.sp-chips button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); font-weight: 700; }
+.sp-res { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 14px; align-items: center; padding: 12px 14px; border-radius: 14px; background: var(--surface-2); margin: 0 0 12px; position: sticky; top: 0; z-index: 2; box-shadow: 0 8px 18px -12px rgba(0, 0, 0, .35); }
+.sp-why { padding: 12px 14px; border-left: 4px solid var(--accent); background: var(--accent-soft); border-radius: 0 10px 10px 0; }
+.sp-why p { margin: 0 0 6px; font-size: 15px; }
+.sp-sign svg { width: 72px; height: 72px; display: block; }
+@media (prefers-reduced-motion: no-preference) { .sp-sign svg { animation: sp-in .35s cubic-bezier(.2, .9, .3, 1.3); } @keyframes sp-in { from { transform: scale(.7); opacity: 0; } } }
+.sp-res b { font-family: var(--font-display); font-size: 30px; line-height: 1.1; display: block; }
+.sp-res small { color: var(--muted); font-size: 13px; }
+.sp-ref { font-size: 12px !important; color: var(--muted); }
+@media (max-width: 480px) { .sp-res { grid-template-columns: 52px minmax(0, 1fr); gap: 12px; padding: 10px 12px; } .sp-sign svg { width: 52px; height: 52px; } .sp-res b { font-size: 24px; } }
+/* Palabras clave resaltadas al corregir */
+mark.kw { background: color-mix(in srgb, var(--accent) 16%, transparent); box-shadow: inset 0 -2px 0 color-mix(in srgb, var(--accent) 70%, transparent); color: inherit; border-radius: 3px; padding: 0 2px; }
 .btn-xs { padding: 4px 12px; font-size: 13px; min-height: 0; }
 .old-note { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
 .old-note svg { width: 18px; height: 18px; flex: none; }
@@ -2991,6 +3006,8 @@ function home() {
         <div class="topic-foot"><span>${QP.length} cruces${prefs.qpBest ? ` · mejor: ${prefs.qpBest}/${QP.length}` : ""}</span><span>Jugar</span></div></div></a>
       <a class="topic" href="#ruta" id="go-ruta">${PIC.ruta}<div><h3>Ruta por la ciudad</h3><p>De casa a la autoescuela: garaje, colegio, semáforo, glorieta, autovía, túnel y aparcar. Una pregunta en cada parada.</p>
         <div class="topic-foot"><span>${RT_STOPS.length} paradas${prefs.rtBest ? ` · mejor: ${prefs.rtBest}/${RT_STOPS.length}` : ""}</span><span>Salir</span></div></div></a>
+      <button class="topic" id="go-speed">${PIC.velocidad}<div><h3>Velocidades al momento</h3><p>Elige vehículo y vía (turismo en autovía, camión en travesía, ciclomotor en ciudad…) y te dice el límite.</p>
+        <div class="topic-foot"><span>${SP_VEH.length} vehículos · ${SP_VIA.length} vías</span><span>Consultar</span></div></div></button>
       <button class="topic" id="go-nums">${PIC.chuleta}<div><h3>Repaso de cifras</h3><p>Solo preguntas de números: velocidades, tasas, distancias, plazos, puntos y masas. Es donde más se falla.</p>
         <div class="topic-foot"><span>${(() => { const a = Q.filter(isNum), t = a.filter(q => seen[q.id] !== undefined); return `${a.length} preguntas${t.length ? ` · aciertas ${Math.round(t.filter(q => seen[q.id] === 1).length / t.length * 100)} %` : ""}`; })()}</span><span>Practicar</span></div></div></button>
       <a class="topic" href="#buscar" id="go-buscar">${PIC.buscar}<div><h3>Buscador</h3><p>Escribe un tema, como «glorieta» o «alcohol», y verás todas las preguntas, señales y cifras sobre él.</p>
@@ -3033,6 +3050,7 @@ function home() {
   $("#start-mix").onclick = () => startPractice(shuffle(Q).slice(0, 10), "Práctica rápida");
   bindPlan(); bindStreak(); drawCharts(); bindTypes(); paintNext(); bindHTabs();
   const gnu = $("#go-nums"); if (gnu) gnu.onclick = openNums;
+  const gsp = $("#go-speed"); if (gsp) gsp.onclick = openSpeed;
   const gn = $("#go-night"); if (gn) gn.onclick = () => startPractice(shuffle(todayFails()).slice(0, 10), "Repaso antes de dormir");
   document.querySelectorAll("[data-topic]").forEach(b => b.onclick = () => morphTo(b, () => startPractice(shuffle(Q.filter(q => q.t === b.dataset.topic)), TEMAS[b.dataset.topic].n)));
 }
@@ -3098,6 +3116,7 @@ const PIC = (() => {
   const P = "var(--surface)", K = "var(--fg)", A = "var(--accent)", R = "#e0434f", Y = "#f2b632", G = "var(--ok)";
   const w = b => `<svg viewBox="0 0 64 64" aria-hidden="true" class="pic64">${b}</svg>`;
   return {
+    velocidad: w(`<path d="M8 44 A24 24 0 1 1 56 44" fill="none" stroke="${K}" stroke-width="7" stroke-linecap="round" opacity=".75"/><path d="M8 44 A24 24 0 0 1 20 23" fill="none" stroke="${G}" stroke-width="7" stroke-linecap="round"/><path d="M44 23 A24 24 0 0 1 56 44" fill="none" stroke="${R}" stroke-width="7" stroke-linecap="round"/><path d="M32 44 L45 26" stroke="${A}" stroke-width="5" stroke-linecap="round"/><circle cx="32" cy="44" r="6" fill="${K}"/><rect x="18" y="52" width="28" height="9" rx="3" fill="${Y}"/>`),
     ruta: w(`<path d="M10 58 C10 40 50 46 50 30 S22 16 24 6" fill="none" stroke="${K}" stroke-width="10" stroke-linecap="round" opacity=".7"/><path d="M10 58 C10 40 50 46 50 30 S22 16 24 6" fill="none" stroke="${P}" stroke-width="1.8" stroke-dasharray="4 4"/><path d="M48 4c-5 0-9 4-9 9 0 7 9 15 9 15s9-8 9-15c0-5-4-9-9-9z" fill="${R}"/><circle cx="48" cy="13" r="3.4" fill="${P}"/><rect x="4" y="48" width="12" height="9" rx="3" fill="${Y}"/>`),
     prioridad: w(`<rect x="22" y="4" width="20" height="56" rx="3" fill="${K}" opacity=".75"/><rect x="4" y="22" width="56" height="20" rx="3" fill="${K}" opacity=".75"/><rect x="26" y="40" width="10" height="17" rx="3" fill="${A}"/><rect x="45" y="27" width="17" height="10" rx="3" fill="${R}"/><path d="M31 37v-9" stroke="${Y}" stroke-width="3" stroke-linecap="round"/><path d="M27 31l4-5 4 5" fill="none" stroke="${Y}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`),
     examen: w(`<rect x="13" y="9" width="32" height="44" rx="5" fill="${P}" stroke="${K}" stroke-width="2.5"/><rect x="22" y="5" width="14" height="8" rx="3" fill="${A}"/><path d="M19 23l3 3 5-6M19 34l3 3 5-6" fill="none" stroke="${G}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M31 24h8M31 35h8M19 45h14" stroke="${K}" stroke-width="2.5" stroke-linecap="round" opacity=".55"/><circle cx="47" cy="45" r="11" fill="${Y}" stroke="${K}" stroke-width="2.5"/><path d="M47 39v6l4 3" fill="none" stroke="${K}" stroke-width="2.5" stroke-linecap="round"/>`),
@@ -3438,10 +3457,11 @@ const CHEAT_COLS = [[0, 4], [2, 5], [1, 3, 6]];
 function cheatView() {
   app.innerHTML = `
   <div class="page-head section-head" style="align-items:flex-end"><div><div class="eyebrow">Repaso rápido</div><h1>Chuleta de números</h1><p class="lead">Las cifras que más se preguntan en el examen, en una sola página. Referidas a turismos y al permiso B.</p></div>
-  <button class="btn btn-primary" id="cheat-test">Ponerme a prueba</button></div>
+  <div class="btn-row" style="margin:0"><button class="btn" id="cheat-speed">Velocidades al momento</button><button class="btn btn-primary" id="cheat-test">Ponerme a prueba</button></div></div>
   <div class="cheat">${CHEAT_COLS.map(col => `<div class="cheat-col">${col.map(i => { const c = CHEAT[i]; return `<section class="card" style="order:${i}"><h2>${ART[c.icon]}${c.h}</h2><dl>${c.rows.map(([k, v, n]) => `<div><dt>${k}</dt><dd>${v}${n ? `<small>${n}</small>` : ""}</dd></div>`).join("")}</dl></section>`; }).join("")}</div>`).join("")}</div>`;
   // Preguntas con cifras: velocidad, alcohol, puntos y normas
   $("#cheat-test").onclick = openNums;
+  $("#cheat-speed").onclick = openSpeed;
 }
 
 
@@ -3768,6 +3788,76 @@ function openNums() {
   openModal("Repaso de cifras", `<p class="modal-lead">Solo preguntas cuyas respuestas son números: velocidades, tasas, distancias, plazos, puntos y masas. Salen antes las que has fallado y las que no has visto.</p><div class="nums"></div>`);
   draw();
 }
+// Velocidades al momento: límite genérico según vehículo y vía (RGC arts. 48 y 50)
+const SP_VEH = [
+  ["tur", "Turismo", [120, 90], /turismo/i],
+  ["moto", "Motocicleta", [120, 90], /motocicleta|\bmoto\b/i],
+  ["pick", "Pick-up", [120, 90], /pick/i],
+  ["acl", "Autocaravana hasta 3.500 kg", [120, 90], /autocaravana/i],
+  ["acp", "Autocaravana de más de 3.500 kg", [90, 80], /autocaravana/i],
+  ["der", "Derivado de turismo o mixto adaptable", [100, 90], /derivado|mixto/i],
+  ["bus", "Autobús", [100, 90], /autob[uú]s/i],
+  ["cam", "Camión o furgón", [90, 80], /cami[oó]n|furg/i],
+  ["rem", "Con remolque", [90, 80], /remolque/i],
+  ["cic", "Ciclomotor o cuadriciclo ligero", [45, 45], /ciclomotor|cuadriciclo/i],
+  ["bici", "Bicicleta", [45, 45], /bicicleta|ciclista/i],
+];
+const SP_VIA = [["aut", "Autopista o autovía"], ["conv", "Carretera convencional"], ["urb2", "Ciudad, 2 o más carriles por sentido"], ["urb1", "Ciudad, 1 carril por sentido"], ["plat", "Calle de plataforma única"], ["trav", "Travesía"], ["tierra", "Vía sin pavimentar"]];
+let spPick = { v: "tur", r: "aut", x: false };
+function spLimit(v, r, x) {
+  const V = SP_VEH.find(a => a[0] === v), out = r === "aut" || r === "conv";
+  if (r === "tierra") return { k: 30, why: "En las vías sin pavimentar el límite es 30 km/h para todos los vehículos." };
+  if (r === "aut" && v === "cic") return { k: null, why: "Los ciclomotores y los cuadriciclos ligeros no pueden circular por autopistas ni autovías." };
+  if (r === "aut" && v === "bici") return { k: 45, why: "Por autopista no pueden circular. Por autovía sí, por el arcén, si el ciclista tiene más de 14 años y no hay una prohibición señalizada. Su límite es 45 km/h, aunque pueden superarlo donde la vía lo permita." };
+  if (out) {
+    let k = V[2][r === "aut" ? 0 : 1], why = `Límite genérico de este vehículo en ${r === "aut" ? "autopista y autovía" : "carretera convencional"}.`;
+    if (x && v === "bus") { k -= 10; why = "Con transporte escolar o de menores el límite baja 10 km/h."; }
+    if (x && v === "cam") { k -= 10; why = "Con mercancías peligrosas el límite baja 10 km/h."; }
+    if (v === "bici") why = "Las bicicletas tienen un límite de 45 km/h fuera de poblado, aunque pueden superarlo donde la vía lo permita.";
+    return { k, why, min: r === "aut" && k > 45 ? "Mínima: la mitad del límite de la vía (60 km/h en una autovía de 120), salvo causa justificada." : "" };
+  }
+  const road = { urb2: 50, urb1: 30, plat: 20, trav: 50 }[r];
+  let k = road, why = { urb2: "En ciudad, en calles con dos o más carriles por sentido, el límite es 50 km/h.", urb1: "En ciudad, en calles con un solo carril por sentido, el límite es 30 km/h.", plat: "En calles de plataforma única, con acera y calzada al mismo nivel, el límite es 20 km/h.", trav: "En las travesías el límite es 50 km/h para todo tipo de vehículos." }[r];
+  if (x && v === "cam" && (r === "urb2" || r === "trav")) { k = 40; why = "Con mercancías peligrosas, en calles de dos o más carriles por sentido y en travesías, el máximo es 40 km/h."; }
+  if (v === "cic" && k > 45) { k = 45; why += " El ciclomotor, por construcción, no pasa de 45 km/h."; }
+  return { k, why, min: r === "urb1" ? "El ayuntamiento puede subirlo hasta 50 km/h con señales, o bajarlo." : "El ayuntamiento puede rebajarlo con señales específicas." };
+}
+const spSign = k => k === null
+  ? `<svg viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="92" fill="${RED}"/><circle cx="100" cy="100" r="72" fill="${WHITE}"/><rect x="38" y="91" width="124" height="18" fill="${RED}" transform="rotate(45 100 100)"/></svg>`
+  : `<svg viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="92" fill="${RED}"/><circle cx="100" cy="100" r="72" fill="${WHITE}"/><text x="100" y="${k >= 100 ? 124 : 128}" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="${k >= 100 ? 64 : 78}" fill="${BLACK}">${k}</text></svg>`;
+function openSpeed() {
+  const draw = () => {
+    const { v, r, x } = spPick, V = SP_VEH.find(a => a[0] === v), Vn = SP_VIA.find(a => a[0] === r)[1], res = spLimit(v, r, x);
+    const xl = v === "bus" ? "Transporte escolar o de menores" : v === "cam" ? "Lleva mercancías peligrosas" : "";
+    const qs = Q.filter(q => /km\/h/i.test(q.q + " " + q.o.join(" ")) && V[3].test(q.q));
+    $("#modal-in").querySelector(".spd").innerHTML = `
+      <div class="sp-res" role="status"><div class="sp-sign">${spSign(res.k)}</div><div><b>${res.k === null ? "No puede circular" : `${res.k} km/h`}</b><small>${esc(V[1])}${xl && x ? ` · ${xl.toLowerCase()}` : ""} · ${esc(Vn)}</small></div></div>
+      <span class="field-l">Vehículo</span><div class="sp-chips">${SP_VEH.map(([k, n]) => `<button type="button" aria-pressed="${v === k}" data-spv="${k}">${n}</button>`).join("")}</div>
+      ${xl ? `<label class="opt-toggle" for="sp-x"><input type="checkbox" id="sp-x" ${x ? "checked" : ""}><span><b>${xl}</b></span></label>` : ""}
+      <span class="field-l">Vía</span><div class="sp-chips">${SP_VIA.map(([k, n]) => `<button type="button" aria-pressed="${r === k}" data-spr="${k}">${n}</button>`).join("")}</div>
+      <div class="sp-why"><p>${res.why}</p>${res.min ? `<p class="muted">${res.min}</p>` : ""}<p class="sp-ref">Reglamento General de Circulación, arts. 48 y 50. Son los límites genéricos: si hay una señal, manda la señal.</p></div>
+      ${qs.length >= 3 ? `<div class="btn-row"><button class="btn" id="sp-go">Practicar ${Math.min(qs.length, 10)} preguntas de velocidad de este vehículo</button></div>` : ""}`;
+    document.querySelectorAll("[data-spv]").forEach(b => b.onclick = () => { spPick.v = b.dataset.spv; spPick.x = false; draw(); });
+    document.querySelectorAll("[data-spr]").forEach(b => b.onclick = () => { spPick.r = b.dataset.spr; draw(); });
+    const cx = $("#sp-x"); if (cx) cx.onchange = () => { spPick.x = cx.checked; draw(); };
+    const g = $("#sp-go"); if (g) g.onclick = () => { modal.close(); startPractice(shuffle(qs).slice(0, 10), `Velocidades: ${V[1]}`); };
+  };
+  openModal("Velocidades al momento", `<p class="modal-lead">Elige el vehículo y la vía y verás su velocidad máxima genérica.</p><div class="spd"></div>`);
+  draw();
+}
+// Palabras que suelen decidir la respuesta; se resaltan al corregir
+const KW_WORDS = ["siempre", "nunca", "solo", "sólo", "solamente", "únicamente", "salvo", "excepto", "todos", "todas", "ningún", "ninguna", "ninguno", "cualquier", "prohibido", "prohibida", "obligatorio", "obligatoria", "permitido", "permitida",
+  "turismos?", "motocicletas?", "motos?", "ciclomotor(?:es)?", "camión", "camiones", "autobús", "autobuses", "bicicletas?", "ciclistas?", "peatón", "peatones", "remolque", "autocaravanas?", "noveles?",
+  "autopistas?", "autovías?", "interurbanas?", "urbanas?", "poblado", "travesías?", "carretera convencional", "glorietas?", "túnel(?:es)?", "de noche", "lluvia", "niebla",
+  "como máximo", "como mínimo", "al menos", "máxim[oa]", "mínim[oa]", "más de", "menos de"];
+const KW_NUM = String.raw`\d+(?:[.,]\d+)*(?:\s?(?:km\/h|mg\/l|g\/l|minutos|meses|metros|m|cm|kg|años|días|horas|segundos|puntos|%|€))?`;
+const KW_RE = new RegExp(String.raw`(^|[^\p{L}\d])(${KW_NUM}|${KW_WORDS.join("|")})(?![\p{L}\d])`, "giu");
+function kwHTML(t) {
+  if (prefs.kw === false) return esc(t);
+  let out = "", last = 0;
+  for (const m of String(t).matchAll(KW_RE)) { const i = m.index + m[1].length; out += esc(t.slice(last, i)) + `<mark class="kw">${esc(m[2])}</mark>`; last = i + m[2].length; }
+  return out + esc(t.slice(last));
+}
 function guideView() {
   const done = new Set(store.get("bring", []));
   app.innerHTML = `
@@ -4079,7 +4169,7 @@ function renderQ(S) {
     ${q.img ? `<figure class="qimg" data-zoom="${esc(q.img)}" title="Toca para ampliar">${imgHTML(q.img)}<figcaption>Ilustración propia</figcaption><button class="zoom-btn" aria-label="Ampliar imagen">${ICON.zoom}</button></figure>` : ""}
     <div class="qbody">
       <div class="qmeta"><span>Pregunta ${S.i + 1} de ${S.qs.length}</span><span class="tema" style="--tc:var(--t-${q.t})">${TEMAS[q.t].n}</span>${S.flags.has(S.i) && !S.done ? `<span>·</span><span class="flagged">Marcada para revisar</span>` : ""}</div>
-      <p class="qtext" id="qtext">${esc(q.q)}</p>
+      <p class="qtext" id="qtext">${reveal ? kwHTML(q.q) : esc(q.q)}</p>
       <div class="opts" role="radiogroup" aria-labelledby="qtext">
         ${q.o.map((o, k) => {
           let cls = "";
@@ -4087,7 +4177,7 @@ function renderQ(S) {
           else if (k === chosen) cls = "sel";
           const mk = cls === "right" ? `<span class="mk" aria-label="${k === chosen ? "Correcta, tu respuesta" : "Respuesta correcta"}">${ICON.check2}</span>` : cls === "wrong" ? `<span class="mk" aria-label="Tu respuesta, incorrecta">${ICON.cross2}</span>` : "";
           const tagT = reveal && k === chosen ? `<small class="yours">Tu respuesta</small>` : "";
-          return `<button class="opt ${cls}${mk ? " has-mk" : ""}${cls === "right" && S.justAnswered === S.i ? " pop" : ""}" role="radio" aria-checked="${k === chosen}" data-opt="${k}" id="opt-${k}" ${reveal ? "disabled" : ""}><span class="l">${L[k]}</span><span>${esc(o)}${tagT}</span>${mk}</button>`;
+          return `<button class="opt ${cls}${mk ? " has-mk" : ""}${cls === "right" && S.justAnswered === S.i ? " pop" : ""}" role="radio" aria-checked="${k === chosen}" data-opt="${k}" id="opt-${k}" ${reveal ? "disabled" : ""}><span class="l">${L[k]}</span><span>${reveal && (k === q.a || k === chosen) ? kwHTML(o) : esc(o)}${tagT}</span>${mk}</button>`;
         }).join("")}
       </div>
       ${!reveal && S.mode === "practice" && S.hint === S.i ? `<div class="hint" role="status"><b>Recuerda</b>${esc(hintFor(q))}</div>` : ""}
@@ -4521,6 +4611,7 @@ function openSettings() {
   openModal("Ajustes", `<span class="field-l" id="sw-l">Color de la web <span class="sw-name" id="sw-name">· ${(ACCENTS.find(x => x[0] === (prefs.accent || "azul")) || ACCENTS[0])[1]}</span></span>
     <div class="swatches" role="radiogroup" aria-labelledby="sw-l">${ACCENTS.map(([k, n, c]) => `<button role="radio" aria-checked="${(prefs.accent || "azul") === k}" aria-label="${n}" title="${n}" data-acc="${k}" style="--sw:${c}">${ICON.check2}</button>`).join("")}</div>
     <label class="opt-toggle" for="p-auto2"><input type="checkbox" id="p-auto2" ${prefs.autoNext ? "checked" : ""}><span><b>Pasar solo a la siguiente</b><small>En el examen, al elegir una respuesta se pasa a la siguiente pregunta.</small></span></label>
+    <label class="opt-toggle" for="p-kw"><input type="checkbox" id="p-kw" ${prefs.kw !== false ? "checked" : ""}><span><b>Resaltar palabras clave al corregir</b><small>Marca las palabras que decidían la respuesta: «siempre», «salvo», «turismo», «interurbana», las cifras…</small></span></label>
     ${"vibrate" in navigator ? `<label class="opt-toggle" for="p-vibe"><input type="checkbox" id="p-vibe" ${prefs.vibe !== false ? "checked" : ""}><span><b>Vibrar al responder</b><small>Un toque al acertar y dos al fallar en la práctica.</small></span></label>` : ""}
     ${remindHTML()}
     ${who() ? `<button class="link-danger" id="p-wipe">Borrar mis datos guardados en internet</button>` : ""}`);
@@ -4531,6 +4622,7 @@ function openSettings() {
     $("#sw-name").textContent = "· " + b.title;
   });
   $("#p-auto2").onchange = e => { prefs.autoNext = e.target.checked; store.set("prefs", prefs); };
+  $("#p-kw").onchange = e => { prefs.kw = e.target.checked; store.set("prefs", prefs); };
   const vb = $("#p-vibe"); if (vb) vb.onchange = () => { prefs.vibe = vb.checked; store.set("prefs", prefs); if (vb.checked) buzz(true); };
   const w = $("#p-wipe"); if (w) w.onclick = openWipe;
 }
