@@ -627,28 +627,52 @@ h1, h2, h3 { letter-spacing: -.01em; }
   main.sk-in :is(.ready, #next-zone, #plan-zone, #streak-zone, .tring b, .topic-foot, #hpane-prog .section > :not(.section-head), .badges) { animation: sk-in .4s ease both; }
   @keyframes sk-in { from { opacity: 0; } }
 }
-/* Tirar hacia abajo en la portada para sincronizar: pastilla con un cochecito que arranca */
+/* Tirar hacia abajo en la portada para sincronizar: gota de cristal (Liquid Glass) con un anillo que se llena,
+   se estira si tiras de más, salta al estar lista y se convierte en una pastilla mientras sincroniza */
 html.at-home, html.at-home body { overscroll-behavior-y: contain; }
-.ptr { position: fixed; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 74px); z-index: 8; pointer-events: none; opacity: var(--p, 0); transform: translate(-50%, calc(-60px + var(--p, 0) * 60px)); transition: transform .3s cubic-bezier(.2, .8, .2, 1), opacity .3s; }
+.ptr { --p: 0; --x: 0; position: fixed; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 62px); z-index: 8; pointer-events: none;
+  opacity: min(1, calc(var(--p) * 3)); transform: translate(-50%, calc(-58px + var(--p) * 80px + var(--x) * 26px));
+  transition: transform .55s cubic-bezier(.3, 1.45, .5, 1), opacity .3s; }
 .ptr.drag { transition: none; }
-.ptr.go, .ptr.done { --p: 1; }
-.ptr-in { display: flex; align-items: center; gap: 10px; padding: 8px 16px 8px 10px; border-radius: 999px; background: var(--surface); color: var(--fg); box-shadow: var(--shadow-lg); border: 1px solid color-mix(in srgb, var(--line) 75%, transparent); font-size: 14px; font-weight: 600; white-space: nowrap; }
-.ptr-road { position: relative; width: 64px; height: 26px; overflow: hidden; border-bottom: 2px dashed color-mix(in srgb, var(--muted) 55%, transparent); }
-.ptr-car { position: absolute; bottom: 1px; left: 0; width: 36px; height: 18px; transform: translateX(calc(var(--p, 0) * 26px - 8px)); }
-.ptr-car .pc-body { fill: var(--accent); }
-.ptr-car .pc-win { fill: color-mix(in srgb, var(--surface) 85%, var(--accent)); }
-.ptr-car .pc-w circle { fill: var(--fg); }
-.ptr-car .pc-w line { stroke: var(--surface); stroke-width: 1.4; stroke-linecap: round; }
-.ptr-car .pc-w { transform-box: fill-box; transform-origin: center; transform: rotate(calc(var(--p, 0) * 360deg)); }
-.ptr.ready .ptr-tx { color: var(--accent); }
-.ptr.done .ptr-car { transform: translateX(18px); }
+.ptr.go, .ptr.done { --p: 1; --x: 0; }
+.ptr.out { --p: 1; opacity: 0; transform: translate(-50%, -64px) scale(.7); transition: transform .45s cubic-bezier(.55, 0, .7, .2), opacity .3s .12s; }
+.ptr-drop { position: relative; display: flex; align-items: center; gap: 8px; width: calc(52px - var(--x) * 8px); height: calc(52px + var(--x) * 18px); padding: 0 0 0 6px; border-radius: 999px; overflow: hidden; color: var(--fg);
+  background: linear-gradient(180deg, color-mix(in srgb, #fff 20%, transparent), transparent 60%), var(--lg-tint);
+  -webkit-backdrop-filter: var(--lg-blur); backdrop-filter: var(--lg-blur);
+  box-shadow: inset 0 1px 0 var(--lg-edge), inset 0 -1px 0 var(--lg-rim), inset 0 0 0 1px var(--lg-rim), 0 14px 34px -10px var(--lg-shade), 0 2px 10px rgba(0, 0, 0, .08);
+  transition: width .55s cubic-bezier(.3, 1.3, .5, 1), height .55s cubic-bezier(.3, 1.6, .5, 1), box-shadow .3s; }
+.lg-refract .ptr-drop { backdrop-filter: var(--lg-blur-r); }
+.ptr.drag .ptr-drop { transition: box-shadow .3s; }
+.ptr-drop::before { content: ""; position: absolute; left: 10%; right: 10%; top: 2px; height: 42%; border-radius: 999px; pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .55), rgba(255, 255, 255, 0)); opacity: .55; }
+.ptr.ready .ptr-drop, .ptr.go .ptr-drop { box-shadow: inset 0 1px 0 var(--lg-edge), inset 0 -1px 0 var(--lg-rim), inset 0 0 0 1px color-mix(in srgb, var(--accent) 35%, var(--lg-rim)), 0 14px 34px -10px color-mix(in srgb, var(--accent) 45%, transparent), 0 2px 10px rgba(0, 0, 0, .08); }
+.ptr.go .ptr-drop, .ptr.done .ptr-drop { width: var(--w, 190px); }
+.ptr-ring { position: relative; flex: none; width: 40px; height: 40px; }
+.ptr-ring > svg:first-child { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.pr-track { fill: none; stroke: color-mix(in srgb, var(--fg) 10%, transparent); stroke-width: 3; }
+.pr-arc { fill: none; stroke: var(--accent); stroke-width: 3; stroke-linecap: round; transform: rotate(-90deg); transform-origin: 20px 20px; transition: stroke .3s; }
+.ptr-ic, .ptr-ck { position: absolute; inset: 11px; width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.ptr-ic { color: color-mix(in srgb, var(--fg) 55%, transparent); transition: color .25s, opacity .25s, scale .3s; }
+.ptr.ready .ptr-ic, .ptr.go .ptr-ic { color: var(--accent); }
+.ptr-ck { color: var(--ok); }
+.ptr-ck path { stroke-dasharray: 1; stroke-dashoffset: 1; }
+.ptr.done .ptr-ic { opacity: 0; scale: .4; }
+.ptr.done .pr-arc { stroke: var(--ok); stroke-dasharray: 100 100 !important; }
+.ptr.done .ptr-ck path { stroke-dashoffset: 0; transition: stroke-dashoffset .4s .1s cubic-bezier(.6, 0, .3, 1); }
+.ptr.done.warn .pr-arc { stroke: var(--warn); }
+.ptr.done.warn .ptr-ck { color: var(--warn); }
+.ptr-tx { flex: none; padding-right: 20px; font-size: 14px; font-weight: 650; white-space: nowrap; opacity: 0; transform: translateX(-8px); transition: opacity .2s, transform .35s; }
+.ptr.go .ptr-tx, .ptr.done .ptr-tx { opacity: 1; transform: none; transition: opacity .3s .12s, transform .45s .1s cubic-bezier(.3, 1.4, .5, 1); }
 @media (prefers-reduced-motion: no-preference) {
-  .ptr.go .ptr-car { animation: ptr-drive .9s linear infinite; }
-  .ptr.go .pc-w { animation: ptr-spin .35s linear infinite; }
-  @keyframes ptr-drive { from { transform: translateX(-40px); } to { transform: translateX(70px); } }
-  @keyframes ptr-spin { to { transform: rotate(360deg); } }
-  .ptr.done .ptr-car { transition: transform .35s cubic-bezier(.2, .8, .2, 1); }
+  .ptr.ready .ptr-ring { animation: ptr-pop .4s cubic-bezier(.3, 1.8, .5, 1); }
+  @keyframes ptr-pop { 40% { scale: 1.18; } }
+  .ptr.go .pr-arc { stroke-dasharray: 26 100 !important; animation: ptr-spin .8s linear infinite; }
+  .ptr.go .ptr-ic { animation: ptr-spin 1.2s cubic-bezier(.5, .1, .5, .9) infinite; }
+  @keyframes ptr-spin { to { rotate: 360deg; } }
+  .ptr.done .ptr-drop { animation: ptr-done .5s cubic-bezier(.3, 1.6, .5, 1); }
+  @keyframes ptr-done { 30% { scale: 1.06; } }
 }
+@media (prefers-reduced-motion: reduce) { .ptr, .ptr-drop { transition-duration: .01s !important; } .ptr.go .pr-arc { stroke-dasharray: 60 100 !important; } }
 /* Botón flotante «Seguir»: vuelve a lo que dejaste a medias */
 .fab { position: fixed; right: max(24px, env(safe-area-inset-right, 0px)); bottom: 24px; z-index: 7; display: flex; align-items: center; gap: 10px; max-width: min(320px, calc(100vw - 32px)); padding: 10px 18px 10px 10px; border: 0; border-radius: 999px; cursor: pointer; font: inherit; text-align: left; color: var(--accent-fg); background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 86%, #fff), var(--accent)); box-shadow: 0 10px 28px color-mix(in srgb, var(--accent) 38%, transparent), 0 2px 6px rgba(0, 0, 0, .12); }
 .fab[hidden] { display: none; }
@@ -5240,15 +5264,18 @@ function paintFab() {
   fab.setAttribute("aria-label", `${t.t}. ${t.s}`);
   fab.onclick = () => t.go();
 }
-// Tirar hacia abajo en la portada (pantallas táctiles): un cochecito arranca y se sincroniza el progreso
+// Tirar hacia abajo en la portada (pantallas táctiles): gota de cristal que se llena, salta al estar lista y sincroniza el progreso
 {
   const ptr = document.createElement("div");
-  ptr.className = "ptr"; ptr.setAttribute("role", "status");
-  ptr.innerHTML = `<div class="ptr-in"><span class="ptr-road" aria-hidden="true"><svg class="ptr-car" viewBox="0 0 48 24"><path class="pc-body" d="M3 18v-5q0-3 3-3h7l5-6q1-1 3-1h9q2 0 3 1l5 6h4q3 0 3 3v5z"/><path class="pc-win" d="M15 10l4.5-5h5v5zM27 10V5h4.5l4.5 5z"/><g class="pc-w"><circle cx="13" cy="18" r="4.5"/><line x1="13" y1="15" x2="13" y2="21"/></g><g class="pc-w"><circle cx="36" cy="18" r="4.5"/><line x1="36" y1="15" x2="36" y2="21"/></g></svg></span><span class="ptr-tx"></span></div>`;
+  ptr.className = "ptr"; ptr.setAttribute("aria-live", "polite");
+  ptr.innerHTML = `<div class="ptr-drop"><span class="ptr-ring" aria-hidden="true"><svg viewBox="0 0 40 40"><circle class="pr-track" cx="20" cy="20" r="16"/><circle class="pr-arc" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="0 100"/></svg><svg class="ptr-ic" viewBox="0 0 24 24"><path d="M19.5 10.5A7.8 7.8 0 0 0 5.6 7.2M4.5 13.5a7.8 7.8 0 0 0 13.9 3.3"/><path d="M5.2 3.6v3.9h3.9M18.8 20.4v-3.9h-3.9"/></svg><svg class="ptr-ck" viewBox="0 0 24 24"><path pathLength="1" d="M5.5 12.5l4.2 4.2 8.8-9.4"/></svg></span><span class="ptr-tx"></span></div>`;
   document.body.append(ptr);
-  const tx = ptr.querySelector(".ptr-tx"), TH = 90;
-  let y0 = null, d = 0, busy = false;
-  const label = s => { if (tx.textContent !== s) tx.textContent = s; };
+  const drop = ptr.firstElementChild, arc = ptr.querySelector(".pr-arc"), ic = ptr.querySelector(".ptr-ic"), tx = ptr.querySelector(".ptr-tx"), TH = 90;
+  let y0 = null, d = 0, busy = false, wasReady = false;
+  const set = (p, x) => { ptr.style.setProperty("--p", p.toFixed(3)); ptr.style.setProperty("--x", x.toFixed(3)); arc.setAttribute("stroke-dasharray", `${(p * 100).toFixed(1)} 100`); ic.style.rotate = `${Math.round(p * 300)}deg`; };
+  const reset = () => { ptr.className = "ptr"; ptr.style.removeProperty("--p"); ptr.style.removeProperty("--x"); ptr.style.removeProperty("--w"); arc.setAttribute("stroke-dasharray", "0 100"); ic.style.rotate = ""; tx.textContent = ""; wasReady = false; };
+  // La pastilla se ensancha justo hasta el texto
+  const say = s => { tx.textContent = s; ptr.style.setProperty("--w", `${Math.ceil(52 + 8 + tx.scrollWidth)}px`); };
   addEventListener("touchstart", e => {
     if (busy || route() !== "inicio" || scrollY > 30 || e.touches.length > 1 || document.querySelector("dialog[open]")) return;
     y0 = e.touches[0].clientY; d = 0;
@@ -5258,24 +5285,28 @@ function paintFab() {
     // Mientras la página aún sube hasta arriba del todo no cuenta: se empieza a medir desde ahí
     if (scrollY > 0) { y0 = e.touches[0].clientY; return; }
     d = Math.max(0, e.touches[0].clientY - y0) * .55;
-    ptr.style.setProperty("--p", Math.min(1, d / TH).toFixed(3));
-    ptr.className = "ptr drag" + (d >= TH ? " ready" : "");
-    label(d >= TH ? "Suelta para sincronizar" : "Tira para sincronizar");
+    const ready = d >= TH, over = Math.max(0, d - TH);
+    set(Math.min(1, d / TH), 1 - Math.exp(-over / 70));
+    ptr.className = "ptr drag" + (ready ? " ready" : "");
+    if (ready && !wasReady) { sfx("tap"); try { if (prefs.vibe !== false && navigator.vibrate) navigator.vibrate(8); } catch {} }
+    wasReady = ready;
   }, { passive: true });
   const end = () => {
     if (y0 === null) return; y0 = null;
     if (d >= TH) return run();
-    ptr.className = "ptr"; ptr.style.removeProperty("--p");
+    ptr.className = "ptr"; set(0, 0); setTimeout(() => { if (!busy) reset(); }, 500);
   };
   addEventListener("touchend", end); addEventListener("touchcancel", () => { d = 0; end(); });
   async function run() {
-    busy = true; ptr.style.removeProperty("--p"); ptr.className = "ptr go"; label("Sincronizando…"); buzz(true);
+    busy = true; set(1, 0); ptr.className = "ptr go"; say("Sincronizando…");
     const t0 = Date.now(), name = syncName();
     if (name) await syncStart(); else render();
-    await new Promise(r => setTimeout(r, Math.max(0, 1100 - (Date.now() - t0))));
-    ptr.className = "ptr done";
-    label(!name ? "Entra con tu nombre para guardar tu progreso" : syncState === "off" ? "Sin conexión: se guardará al volver" : "Progreso al día");
-    setTimeout(() => { ptr.className = "ptr"; busy = false; }, name ? 1300 : 2200);
+    await new Promise(r => setTimeout(r, Math.max(0, 1200 - (Date.now() - t0))));
+    const warn = !name || syncState === "off";
+    say(!name ? "Entra con tu nombre para guardar" : syncState === "off" ? "Sin conexión: se guardará luego" : "Progreso al día");
+    ptr.className = "ptr done" + (warn ? " warn" : "");
+    if (!warn) sfx("ok");
+    setTimeout(() => { ptr.className = "ptr out" + (warn ? " warn" : "") + " done"; setTimeout(() => { reset(); busy = false; }, 500); }, warn ? 2200 : 1400);
   }
 }
 // Clic suave al tocar botones y pestañas (las respuestas ya suenan al corregir)
