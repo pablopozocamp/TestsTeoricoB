@@ -1078,6 +1078,17 @@ svg:not(.qimg svg, #modal svg, #lightbox svg) * { animation: none !important; }
 .hero-band .btn-primary { color: var(--hb2); }
 .hero-band .btn-primary:hover:not(:disabled) { background: color-mix(in srgb, var(--hb1) 8%, #fff); }
 .sync-note { font-size: 13px; color: var(--muted); margin-top: 10px; }
+.profile-btn { position: relative; }
+.sync-dot { display: inline-grid; place-items: center; width: 18px; height: 18px; margin-left: -2px; }
+.sync-dot svg { width: 18px; height: 18px; }
+.sync-dot.ok { color: var(--ok); }
+.sync-dot.busy { color: var(--muted); }
+.sync-dot.off { color: var(--warn); }
+@media (max-width: 720px) { .sync-dot { position: absolute; right: -5px; bottom: -5px; width: 17px; height: 17px; border-radius: 50%; background: var(--surface); box-shadow: 0 0 0 1px var(--line); } .sync-dot svg { width: 13px; height: 13px; } }
+.sync-txt { font-size: 13px; font-weight: 600; margin: 8px 0 0; color: var(--muted); }
+.sync-txt.ok { color: var(--ok); } .sync-txt.off { color: var(--warn); }
+.link-danger { display: block; margin-top: 16px; padding: 0; border: 0; background: none; font: inherit; font-size: 14px; font-weight: 600; color: var(--bad); text-decoration: underline; cursor: pointer; }
+.btn-danger { background: var(--bad); border-color: var(--bad); color: #fff; }
 </style>
 <style>body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
 </head>
@@ -2221,38 +2232,79 @@ const SYNC_KEYS = ["seen", "fails", "history", "daily", "badges", "known", "plan
 const syncName = () => { try { return (JSON.parse(localStorage.getItem("tdgt-prefs") || "{}").name || "").trim(); } catch { return ""; } };
 const lsGet = k => { try { return localStorage.getItem("tdgt-" + k); } catch { return null; } };
 const lsSet = (k, v) => { try { v === null ? localStorage.removeItem("tdgt-" + k) : localStorage.setItem("tdgt-" + k, v); } catch {} };
-let syncT = 0;
-function syncLater() { if (!syncName()) return; lsSet("syncdirty", "1"); clearTimeout(syncT); syncT = setTimeout(syncPush, 2500); }
+let syncT = 0, syncState = "";   // "" sin nombre · "busy" guardando · "ok" guardado · "off" sin conexión
+function setSync(st) { syncState = st; if (typeof paintSync === "function") paintSync(); }
+function syncLater() { if (!syncName()) return; lsSet("syncdirty", "1"); setSync("busy"); clearTimeout(syncT); syncT = setTimeout(syncPush, 2500); }
 async function syncPull(name) {
   const r = await fetch(`${SYNC.url}?nombre=eq.${encodeURIComponent(name)}&select=datos,actualizado`, { headers: { apikey: SYNC.key } });
   if (!r.ok) throw new Error("sync " + r.status);
-  return (await r.json())[0] || null;
+  const row = (await r.json())[0];
+  return row && row.datos && !row.datos._borrado ? row : null;
 }
 function syncPush(keepalive = false) {
   const name = syncName(); if (!name) return Promise.resolve();
   clearTimeout(syncT);
   const at = new Date().toISOString(), datos = {};
   SYNC_KEYS.forEach(k => { const v = lsGet(k); if (v !== null) datos[k] = JSON.parse(v); });
+  setSync("busy");
   return fetch(SYNC.url, { method: "POST", keepalive, headers: { apikey: SYNC.key, "Content-Type": "application/json", Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify({ nombre: name, datos, actualizado: at }) })
-    .then(r => { if (r.ok && syncName() === name) { lsSet("syncat", at); lsSet("syncname", name); lsSet("syncdirty", null); } }).catch(() => {});
+    .then(r => { if (!r.ok) throw 0; if (syncName() === name) { lsSet("syncat", at); lsSet("syncname", name); lsSet("syncdirty", null); setSync("ok"); } })
+    .catch(() => setSync("off"));
 }
 function syncApply(row, name) {
   SYNC_KEYS.forEach(k => lsSet(k, k in row.datos ? JSON.stringify(row.datos[k]) : null));
   const pr = row.datos.prefs || {}; pr.name = name; lsSet("prefs", JSON.stringify(pr));
   lsSet("syncat", row.actualizado); lsSet("syncname", name); lsSet("syncdirty", null);
-  try { sessionStorage.setItem("tdgt-synced", name); } catch {}
+  try { sessionStorage.setItem("tdgt-synced", "load"); } catch {}
   location.reload();
+}
+// Juntar el progreso de este navegador con el guardado: se suma todo y, si una pregunta está en los dos, manda la de aquí
+function syncMerge(row, name) {
+  const R = row.datos, L = k => { const v = lsGet(k); return v === null ? undefined : JSON.parse(v); };
+  const seenM = { ...(R.seen || {}), ...(L("seen") || {}) };
+  const failsM = [...new Set([...(R.fails || []), ...(L("fails") || [])])].filter(id => seenM[id] !== 1);
+  const hist = [...(L("history") || []), ...(R.history || [])], hk = new Set();
+  const histM = hist.filter(h => { const k = h.date + "|" + h.ok + "|" + h.n; if (hk.has(k)) return false; hk.add(k); return true; }).sort((a, b) => b.date - a.date);
+  const dailyM = { ...(R.daily || {}) }; Object.entries(L("daily") || {}).forEach(([d, n]) => dailyM[d] = Math.max(dailyM[d] || 0, n));
+  const badgesM = { ...(R.badges || {}) }; Object.entries(L("badges") || {}).forEach(([b, t]) => badgesM[b] = badgesM[b] ? Math.min(badgesM[b], t) : t);
+  const failDayM = { ...(R.failday || {}) }; Object.entries(L("failday") || {}).forEach(([i, d]) => failDayM[i] = failDayM[i] && failDayM[i] > d ? failDayM[i] : d);
+  const pa = L("planday") || {}, pb = R.planday || {};
+  const planM = pa.d && pa.d === pb.d ? { d: pa.d, nuevas: Math.max(pa.nuevas || 0, pb.nuevas || 0), fixed: Math.max(pa.fixed || 0, pb.fixed || 0), t: { ...(pb.t || {}), ...(pa.t || {}) } } : (pa.d || "") >= (pb.d || "") ? pa : pb;
+  const M = { seen: seenM, fails: failsM, history: histM, daily: dailyM, badges: badgesM, failday: failDayM, planday: planM,
+    known: [...new Set([...(R.known || []), ...(L("known") || [])])], bring: [...new Set([...(R.bring || []), ...(L("bring") || [])])] };
+  Object.entries(M).forEach(([k, v]) => lsSet(k, JSON.stringify(v)));
+  ["prefs", "theme", "deck"].forEach(k => { if (lsGet(k) === null && k in R) lsSet(k, JSON.stringify(R[k])); });
+  lsSet("syncname", name); lsSet("syncat", row.actualizado); lsSet("syncdirty", "1");
+  try { sessionStorage.setItem("tdgt-synced", "merge"); } catch {}
+  location.reload();
+}
+async function syncDelete() {
+  const name = syncName(); if (!name) return false;
+  const q = `${SYNC.url}?nombre=eq.${encodeURIComponent(name)}`;
+  try {
+    const r = await fetch(q, { method: "DELETE", headers: { apikey: SYNC.key, Prefer: "return=representation" } });
+    const gone = r.ok ? await r.json() : [];
+    // Si el servidor no deja borrar filas, se deja marcada como borrada y vacía
+    if (!gone.length) {
+      const u = await fetch(SYNC.url, { method: "POST", headers: { apikey: SYNC.key, "Content-Type": "application/json", Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify({ nombre: name, datos: { _borrado: true }, actualizado: new Date().toISOString() }) });
+      if (!u.ok) return false;
+    }
+    return true;
+  } catch { return false; }
 }
 // Al abrir la web: si otro navegador guardó algo más nuevo con este nombre, se carga; si no, se sube lo de aquí
 async function syncStart() {
   const name = syncName(); if (!name) return;
-  let row; try { row = await syncPull(name); } catch { return; }
+  setSync("busy");
+  let row; try { row = await syncPull(name); } catch { return setSync("off"); }
   const same = lsGet("syncname") === name, at = lsGet("syncat") || "", dirty = lsGet("syncdirty");
   if (!row) return syncPush();
-  if (!same) return syncAsk(row, name);
-  if (row.actualizado > at && !dirty) return syncApply(row, name);
-  if (dirty) syncPush();
+  if (!same) return Object.keys(seen).length ? syncMerge(row, name) : syncApply(row, name);
+  if (row.actualizado > at) return dirty ? syncMerge(row, name) : syncApply(row, name);
+  if (dirty) syncPush(); else setSync("ok");
 }
+window.addEventListener("online", () => { if (lsGet("syncdirty")) syncPush(); });
+window.addEventListener("offline", () => { if (syncName()) setSync("off"); });
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden" && lsGet("syncdirty")) syncPush(true); });
 let fails = new Set(store.get("fails", []));
 let seen = store.get("seen", {});          // id -> 1 acertada / 0 fallada (último intento)
@@ -3505,17 +3557,6 @@ function drawResults() {
 
 /* ---------- Ventana modal (zoom y perfil) ---------- */
 const modal = $("#modal");
-function syncAsk(row, name) {
-  const theirs = Object.keys(row.datos.seen || {}).length, mine = Object.keys(seen).length;
-  if (!mine) return syncApply(row, name);
-  const when = new Date(row.actualizado).toLocaleString("es-ES", { dateStyle: "long", timeStyle: "short" });
-  openModal("Ya hay progreso con este nombre", `<p>Con el nombre <b>${esc(name)}</b> hay progreso guardado desde otro navegador: <b>${plural(theirs, "pregunta vista", "preguntas vistas")}</b>, actualizado el ${when}.</p>
-    <p>En este navegador tienes ${plural(mine, "pregunta vista", "preguntas vistas")}. ¿Con cuál te quedas?</p>
-    <div class="btn-row"><button class="btn btn-primary" id="sy-load">Cargar el guardado</button><button class="btn" id="sy-keep">Quedarme con el de aquí</button></div>
-    <p class="sync-note">Si te quedas con el de aquí, se sustituye el guardado con ese nombre.</p>`);
-  $("#sy-load").onclick = () => syncApply(row, name);
-  $("#sy-keep").onclick = () => { modal.close(); syncPush(); };
-}
 function openModal(title, html) {
   $("#modal-in").innerHTML = `<div class="modal-head"><h2>${title}</h2><button class="icon-btn" id="modal-close" aria-label="Cerrar">${ICON.close}</button></div>${html}`;
   $("#modal-close").onclick = () => modal.close();
@@ -3563,13 +3604,23 @@ document.addEventListener("click", e => {
 
 /* ---------- Perfil del alumno ---------- */
 const who = () => (prefs.name || "").trim();
-function paintProfile() { const b = $("#profile-btn"); b.innerHTML = ICON.user + (who() ? `<span>${esc(who())}</span>` : ""); b.title = who() ? `Alumno: ${who()}` : "Poner tu nombre"; }
+const SYNC_TXT = { busy: "Guardando tu progreso…", ok: "Progreso guardado en internet", off: "Sin conexión: se guardará cuando vuelva" };
+const syncIcon = () => syncState && who() ? `<i class="sync-dot ${syncState}" aria-hidden="true"><svg class="sync-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 18h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.1 9.5 4.3 4.3 0 0 0 7 18z"/>${syncState === "ok" ? `<path d="M9.5 13.5l2 2 3.5-3.5"/>` : syncState === "off" ? `<path d="M4 4l16 16"/>` : `<path d="M12 11v4M10 13l2-2 2 2"/>`}</svg></i>` : "";
+function paintSync() {
+  const b = $("#profile-btn"); if (!b) return;
+  const d = b.querySelector(".sync-dot"); if (d) d.remove();
+  if (syncState && who()) b.insertAdjacentHTML("beforeend", syncIcon());
+  b.title = who() ? `Alumno: ${who()}${syncState ? " · " + SYNC_TXT[syncState] : ""}` : "Poner tu nombre";
+  const t = $("#sync-txt"); if (t) { t.textContent = SYNC_TXT[syncState] || ""; t.className = "sync-txt " + syncState; }
+}
+function paintProfile() { const b = $("#profile-btn"); b.innerHTML = ICON.user + (who() ? `<span>${esc(who())}</span>` : ""); paintSync(); }
 $("#profile-btn").onclick = () => {
-  openModal("Perfil del alumno", `<label class="field" for="p-name">Tu nombre<input id="p-name" maxlength="40" autocomplete="name" value="${esc(who())}" placeholder="Por ejemplo: Laura Pérez"><small>Aparece en la cabecera y en tus resultados. Tu progreso se guarda con este nombre: si lo escribes exactamente igual en otro navegador, se cargan tus datos. Cualquiera que ponga el mismo nombre también los verá.</small></label>
+  openModal("Perfil del alumno", `<label class="field" for="p-name">Tu nombre<input id="p-name" maxlength="40" autocomplete="name" value="${esc(who())}" placeholder="Por ejemplo: Laura Pérez"><small>Aparece en la cabecera y en tus resultados. Tu progreso se guarda con este nombre: si lo escribes exactamente igual en otro navegador, se juntan tus datos. Cualquiera que ponga el mismo nombre también los verá.</small>${who() ? `<p class="sync-txt ${syncState}" id="sync-txt" role="status">${SYNC_TXT[syncState] || ""}</p>` : ""}</label>
     <span class="field-l" id="sw-l">Color de la web <span class="sw-name" id="sw-name">· ${(ACCENTS.find(x => x[0] === (prefs.accent || "azul")) || ACCENTS[0])[1]}</span></span>
     <div class="swatches" role="radiogroup" aria-labelledby="sw-l">${ACCENTS.map(([k, n, c]) => `<button role="radio" aria-checked="${(prefs.accent || "azul") === k}" aria-label="${n}" title="${n}" data-acc="${k}" style="--sw:${c}">${ICON.check2}</button>`).join("")}</div>
     ${"vibrate" in navigator ? `<label class="opt-toggle" for="p-vibe"><input type="checkbox" id="p-vibe" ${prefs.vibe !== false ? "checked" : ""}><span><b>Vibrar al responder</b><small>Un toque al acertar y dos al fallar en la práctica.</small></span></label>` : ""}
-    <div class="btn-row"><button class="btn btn-primary" id="p-save">Guardar</button>${who() ? `<button class="btn btn-ghost" id="p-del">Quitar nombre</button>` : ""}</div>`);
+    <div class="btn-row"><button class="btn btn-primary" id="p-save">Guardar</button>${who() ? `<button class="btn btn-ghost" id="p-del">Quitar nombre</button>` : ""}</div>
+    ${who() ? `<button class="link-danger" id="p-wipe">Borrar mis datos guardados en internet</button>` : ""}`);
   const inp = $("#p-name"); inp.focus();
   document.querySelectorAll("[data-acc]").forEach(b => b.onclick = () => {
     prefs.accent = b.dataset.acc; store.set("prefs", prefs); applyAccent();
@@ -3584,10 +3635,22 @@ $("#profile-btn").onclick = () => {
   $("#p-save").onclick = () => save(inp.value.trim());
   inp.onkeydown = e => { if (e.key === "Enter") save(inp.value.trim()); };
   const d = $("#p-del"); if (d) d.onclick = () => save("");
+  const w = $("#p-wipe"); if (w) w.onclick = () => {
+    const name = who();
+    openModal("Borrar tus datos de internet", `<p>Se borrará el progreso guardado con el nombre <b>${esc(name)}</b>. En este navegador se quita el nombre, pero tus preguntas, fallos y exámenes siguen aquí.</p>
+      <p class="sync-note">Si tienes la web abierta con este nombre en otro navegador, al volver a abrirla allí se guardará de nuevo. Quita el nombre también en ese navegador.</p>
+      <div class="btn-row"><button class="btn btn-danger" id="w-yes">Borrar</button><button class="btn" id="w-no">Cancelar</button></div><p class="sync-txt" id="w-msg" role="status"></p>`);
+    $("#w-no").onclick = () => modal.close();
+    $("#w-yes").onclick = async () => {
+      $("#w-yes").disabled = true; $("#w-msg").textContent = "Borrando…";
+      if (await syncDelete()) { prefs.name = ""; store.set("prefs", prefs); ["syncname", "syncat", "syncdirty"].forEach(k => lsSet(k, null)); setSync(""); paintProfile(); render(); $("#w-msg").textContent = "Listo: tus datos ya no están guardados en internet."; $("#w-yes").remove(); $("#w-no").textContent = "Cerrar"; }
+      else { $("#w-yes").disabled = false; $("#w-msg").textContent = "No se ha podido borrar. Comprueba la conexión e inténtalo otra vez."; }
+    };
+  };
 };
 paintProfile();
-syncStart();
-try { if (sessionStorage.getItem("tdgt-synced")) { sessionStorage.removeItem("tdgt-synced"); setTimeout(() => { const t = document.createElement("div"); t.className = "toast"; t.setAttribute("role", "status"); t.innerHTML = `<div><b>Progreso cargado</b><small>Los datos de «${esc(who())}» ya están en este navegador.</small></div>`; document.body.appendChild(t); setTimeout(() => t.remove(), 4000); }, 300); } } catch {}
+syncStart().then(() => { if (lsGet("syncdirty") && syncState !== "busy") syncPush(); });
+try { const syncKind = sessionStorage.getItem("tdgt-synced"); if (syncKind) { sessionStorage.removeItem("tdgt-synced"); setTimeout(() => { const t = document.createElement("div"); t.className = "toast"; t.setAttribute("role", "status"); const merged = syncKind === "merge"; t.innerHTML = `<div><b>${merged ? "Progreso juntado" : "Progreso cargado"}</b><small>${merged ? `Hemos sumado lo de este navegador con lo guardado de «${esc(who())}».` : `Los datos de «${esc(who())}» ya están en este navegador.`}</small></div>`; document.body.appendChild(t); setTimeout(() => t.remove(), 4000); }, 300); } } catch {}
 
 /* ---------- Ayuda en práctica ----------
    Recuerda la norma que se aplica a la pregunta, según su tema, sin marcar la opción correcta. */
