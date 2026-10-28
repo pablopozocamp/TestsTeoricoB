@@ -4495,9 +4495,9 @@ function sfxPlay(ac, out, kind, t) {
     });
   };
   if (kind === "tap") note(620, 0, .06, .2, { glide: .55, hv: 0, att: .002 });
-  else if (kind === "ok") { note(1046.5, 0, .4, .26); note(1568, .08, .7, .24); }
+  else if (kind === "ok") { note(523.3, 0, .45, .3, { h: 3, hv: .08 }); note(784, .09, .75, .28, { h: 3, hv: .08 }); }
   else if (kind === "bad") { note(392, 0, .3, .3, { h: 2, hv: .1, glide: .97, att: .01 }); note(311.1, .14, .5, .3, { h: 2, hv: .1, glide: .96, att: .01 }); }
-  else if (kind === "win") { [523.3, 659.3, 784, 1046.5].forEach((f, i) => note(f, i * .09, .45, .2)); [523.3, 659.3, 784, 1046.5].forEach(f => note(f, .38, 1.5, .08, { hv: .08, att: .03 })); }
+  else if (kind === "win") { [261.6, 329.6, 392, 523.3].forEach((f, i) => note(f, i * .1, .5, .26, { h: 3, hv: .08 })); [261.6, 329.6, 392, 523.3].forEach(f => note(f, .42, 1.6, .1, { h: 2, hv: .06, att: .03 })); }
   else if (kind === "badge") [1568, 2093, 2637, 3136].forEach((f, i) => note(f, i * .065, .5, .09, { hv: .1 }));
 }
 let AC = null, BUS = null;
