@@ -1077,6 +1077,43 @@ svg:not(.qimg svg, #modal svg, #lightbox svg) * { animation: none !important; }
 .empty.art p { margin: 0; max-width: 46ch; }
 .hero-band .btn-primary { color: var(--hb2); }
 .hero-band .btn-primary:hover:not(:disabled) { background: color-mix(in srgb, var(--hb1) 8%, #fff); }
+/* Señal animada a la derecha del banner (solo en pantallas anchas, donde sobra espacio) */
+.hdeco { display: none; }
+@media (min-width: 1600px) {
+  .hdeco { --dk: color-mix(in srgb, var(--hb1) 22%, #e4eeff); --sz: min(270px, calc((100vw - 1120px) / 2 - 60px));
+    display: grid; justify-items: center; gap: 16px; position: absolute; top: 50%; left: calc(100% + (100vw - 1120px) / 4 + 8px); width: var(--sz); transform: translate(-50%, -50%); pointer-events: none; }
+}
+.hdeco-stage { position: relative; width: var(--sz); aspect-ratio: 1; border-radius: 50%;
+  background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--dk) 16%, transparent), transparent 68%);
+  animation: hdeco-float 8s ease-in-out infinite; }
+.hdeco-stage::before { content: ""; position: absolute; inset: 9%; border-radius: 50%; background: rgba(255, 255, 255, .05);
+  border: 1px solid rgba(255, 255, 255, .13); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .16), 0 30px 60px -24px rgba(2, 8, 28, .6);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.hdeco-orbit { position: absolute; inset: 0; width: 100%; height: 100%; animation: hdeco-spin 60s linear infinite; }
+.hdeco-orbit circle { fill: none; stroke: var(--dk); stroke-opacity: .3; stroke-width: 1.5; stroke-dasharray: 14 12; stroke-linecap: round; }
+.hdeco-s { position: absolute; inset: 0; margin: 0; display: grid; place-items: center; opacity: 0;
+  transform: scale(.82) rotate(-8deg); filter: blur(12px);
+  transition: opacity .9s ease, transform 1.2s cubic-bezier(.22, 1, .36, 1), filter .9s ease; }
+.hdeco-s.on { opacity: 1; transform: none; filter: blur(0); }
+.hdeco-s.out { opacity: 0; transform: scale(1.12) rotate(6deg); filter: blur(14px); }
+.hdeco-s svg { width: 56%; height: auto; overflow: visible; filter: drop-shadow(0 14px 22px rgba(2, 8, 30, .45)) drop-shadow(0 0 16px color-mix(in srgb, var(--dk) 30%, transparent)); }
+.hdeco-s figcaption { position: absolute; top: calc(100% + 22px); left: 50%; transform: translateX(-50%); width: max-content; max-width: 130%; text-align: center;
+  font-size: 13px; color: var(--band-muted, #c9d6f0); display: flex; gap: 8px; align-items: center; }
+.hdeco-s figcaption b { font-size: 11px; letter-spacing: .06em; padding: 2px 8px; border-radius: 999px; background: rgba(255, 255, 255, .1); border: 1px solid rgba(255, 255, 255, .16); color: var(--dk); }
+.dk-plate { fill: rgba(255, 255, 255, .1); stroke: var(--dk); stroke-width: 7; stroke-linejoin: round; }
+.dk-thin { fill: none; stroke: var(--dk); stroke-opacity: .55; stroke-width: 3; stroke-linejoin: round; }
+.dk-ring { fill: none; stroke: var(--dk); stroke-opacity: .5; stroke-width: 12; }
+.dk-line { fill: none; stroke: var(--dk); stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; }
+.dk-fill { fill: var(--dk); stroke: var(--dk); stroke-width: 2; stroke-linejoin: round; }
+.dk-txt { fill: var(--dk); font-family: var(--font-display); font-weight: 800; text-anchor: middle; letter-spacing: .02em; }
+.hdeco-dots { display: flex; gap: 6px; margin-top: 40px; }
+.hdeco-dots i { width: 6px; height: 6px; border-radius: 999px; background: rgba(255, 255, 255, .22); transition: width .5s cubic-bezier(.22, 1, .36, 1), background .5s; position: relative; overflow: hidden; }
+.hdeco-dots i.on { width: 26px; }
+.hdeco-dots i.on::after { content: ""; position: absolute; inset: 0; background: var(--dk); transform-origin: left; animation: hdeco-fill var(--hdeco-t, 5s) linear forwards; }
+@keyframes hdeco-float { 50% { transform: translateY(-8px); } }
+@keyframes hdeco-spin { to { transform: rotate(360deg); } }
+@keyframes hdeco-fill { from { transform: scaleX(0); } }
+@media (prefers-reduced-motion: reduce) { .hdeco-stage, .hdeco-orbit { animation: none; } .hdeco-s { transition: opacity .3s; transform: none; filter: none; } .hdeco-dots { display: none; } }
 .sync-note { font-size: 13px; color: var(--muted); margin-top: 10px; }
 .profile-btn { position: relative; }
 .sync-dot { display: inline-grid; place-items: center; width: 18px; height: 18px; margin-left: -2px; }
@@ -2462,6 +2499,18 @@ const EART = (() => {
   };
 })();
 const emptyArt = (k, t) => `<div class="empty art">${EART[k]}<p>${t}</p></div>`;
+// Cambia la señal del banner cada pocos segundos (se para si la pestaña no se ve o si se pide menos movimiento)
+const HDECO_T = 5000;
+setInterval(() => {
+  const d = document.querySelector(".hdeco");
+  if (!d || document.hidden || !d.offsetParent || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const ss = [...d.querySelectorAll(".hdeco-s")], dots = [...d.querySelectorAll(".hdeco-dots i")];
+  const i = ss.findIndex(x => x.classList.contains("on")), n = (i + 1) % ss.length;
+  ss.forEach(x => x.classList.remove("out"));
+  ss[i].classList.replace("on", "out");
+  ss[n].classList.add("on");
+  dots.forEach((x, k) => x.classList.toggle("on", k === n));
+}, HDECO_T);
 function home() {
   const total = Q.length, done = Object.keys(seen).length, right = Object.values(seen).filter(v => v).length;
   const rd = readiness();
@@ -2488,6 +2537,7 @@ function home() {
         <div><b>${fails.size}</b><span>fallos por repasar</span></div>
       </div>
     </div>
+    <div class="hdeco" aria-hidden="true"><div class="hdeco-stage"><svg class="hdeco-orbit" viewBox="0 0 300 300"><circle cx="150" cy="150" r="146"/></svg><figure class="hdeco-s on"><svg viewBox="0 0 200 200"><polygon class="dk-plate" points="173.9,130.6 130.6,173.9 69.4,173.9 26.1,130.6 26.1,69.4 69.4,26.1 130.6,26.1 173.9,69.4"/><polygon class="dk-thin" points="162.8,126.0 126.0,162.8 74.0,162.8 37.2,126.0 37.2,74.0 74.0,37.2 126.0,37.2 162.8,74.0"/><text class="dk-txt" x="100" y="117" font-size="50">STOP</text></svg><figcaption><b>R-2</b>Detención obligatoria</figcaption></figure><figure class="hdeco-s"><svg viewBox="0 0 200 200"><polygon class="dk-plate" points="100,178 22,42 178,42"/><polygon class="dk-thin" points="100,150 50,62 150,62"/></svg><figcaption><b>R-1</b>Ceda el paso</figcaption></figure><figure class="hdeco-s"><svg viewBox="0 0 200 200"><circle class="dk-plate" cx="100" cy="100" r="80"/><path class="dk-line" d="M122.0 61.9 A44 44 0 0 1 141.8 113.6"/><path class="dk-fill" d="M138.1 125.0 L151.3 113.5 L134.2 108.0Z"/><path class="dk-line" d="M122.0 138.1 A44 44 0 0 1 67.3 129.4"/><path class="dk-fill" d="M59.3 120.5 L62.6 137.7 L76.0 125.6Z"/><path class="dk-line" d="M56.0 100.0 A44 44 0 0 1 90.9 57.0"/><path class="dk-fill" d="M102.6 54.5 L86.0 48.8 L89.8 66.4Z"/></svg><figcaption><b>R-402</b>Intersección de sentido giratorio</figcaption></figure><figure class="hdeco-s"><svg viewBox="0 0 200 200"><circle class="dk-plate" cx="100" cy="100" r="80"/><circle class="dk-ring" cx="100" cy="100" r="70"/><text class="dk-txt" x="100" y="125" font-size="72">50</text></svg><figcaption><b>R-301</b>Velocidad máxima</figcaption></figure><figure class="hdeco-s"><svg viewBox="0 0 200 200"><polygon class="dk-plate" points="100,22 178,158 22,158"/><polygon class="dk-thin" points="100,50 152,142 48,142"/><path class="dk-line" d="M88 132 V114 Q88 98 104 92"/><path class="dk-fill" d="M118 87 L101 82 L106 100Z"/></svg><figcaption><b>P-13a</b>Curva peligrosa hacia la derecha</figcaption></figure><figure class="hdeco-s"><svg viewBox="0 0 200 200"><rect class="dk-plate" x="24" y="24" width="152" height="152" rx="18"/><polygon class="dk-thin" points="100,44 158,150 42,150"/><circle class="dk-fill" cx="102" cy="82" r="7"/><path class="dk-line" style="stroke-width:7" d="M100 92 L95 114 M95 114 L84 134 M95 114 L110 132 M98 98 L86 108 M99 98 L113 106"/><path class="dk-thin" d="M60 142 H140" style="stroke-dasharray:10 7"/></svg><figcaption><b>S-13</b>Paso para peatones</figcaption></figure></div><div class="hdeco-dots"><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div></div>
   </section>
 
   <div id="next-zone"></div>
