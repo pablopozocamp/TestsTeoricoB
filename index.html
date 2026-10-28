@@ -627,6 +627,48 @@ h1, h2, h3 { letter-spacing: -.01em; }
   main.sk-in :is(.ready, #next-zone, #plan-zone, #streak-zone, .tring b, .topic-foot, #hpane-prog .section > :not(.section-head), .badges) { animation: sk-in .4s ease both; }
   @keyframes sk-in { from { opacity: 0; } }
 }
+/* Tirar hacia abajo en la portada para sincronizar: pastilla con un cochecito que arranca */
+html.at-home, html.at-home body { overscroll-behavior-y: contain; }
+.ptr { position: fixed; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 74px); z-index: 8; pointer-events: none; opacity: var(--p, 0); transform: translate(-50%, calc(-60px + var(--p, 0) * 60px)); transition: transform .3s cubic-bezier(.2, .8, .2, 1), opacity .3s; }
+.ptr.drag { transition: none; }
+.ptr.go, .ptr.done { --p: 1; }
+.ptr-in { display: flex; align-items: center; gap: 10px; padding: 8px 16px 8px 10px; border-radius: 999px; background: var(--surface); color: var(--fg); box-shadow: var(--shadow-lg); border: 1px solid color-mix(in srgb, var(--line) 75%, transparent); font-size: 14px; font-weight: 600; white-space: nowrap; }
+.ptr-road { position: relative; width: 64px; height: 26px; overflow: hidden; border-bottom: 2px dashed color-mix(in srgb, var(--muted) 55%, transparent); }
+.ptr-car { position: absolute; bottom: 1px; left: 0; width: 36px; height: 18px; transform: translateX(calc(var(--p, 0) * 26px - 8px)); }
+.ptr-car .pc-body { fill: var(--accent); }
+.ptr-car .pc-win { fill: color-mix(in srgb, var(--surface) 85%, var(--accent)); }
+.ptr-car .pc-w circle { fill: var(--fg); }
+.ptr-car .pc-w line { stroke: var(--surface); stroke-width: 1.4; stroke-linecap: round; }
+.ptr-car .pc-w { transform-box: fill-box; transform-origin: center; transform: rotate(calc(var(--p, 0) * 360deg)); }
+.ptr.ready .ptr-tx { color: var(--accent); }
+.ptr.done .ptr-car { transform: translateX(18px); }
+@media (prefers-reduced-motion: no-preference) {
+  .ptr.go .ptr-car { animation: ptr-drive .9s linear infinite; }
+  .ptr.go .pc-w { animation: ptr-spin .35s linear infinite; }
+  @keyframes ptr-drive { from { transform: translateX(-40px); } to { transform: translateX(70px); } }
+  @keyframes ptr-spin { to { transform: rotate(360deg); } }
+  .ptr.done .ptr-car { transition: transform .35s cubic-bezier(.2, .8, .2, 1); }
+}
+/* Botón flotante «Seguir»: vuelve a lo que dejaste a medias */
+.fab { position: fixed; right: max(24px, env(safe-area-inset-right, 0px)); bottom: 24px; z-index: 7; display: flex; align-items: center; gap: 10px; max-width: min(320px, calc(100vw - 32px)); padding: 10px 18px 10px 10px; border: 0; border-radius: 999px; cursor: pointer; font: inherit; text-align: left; color: var(--accent-fg); background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 86%, #fff), var(--accent)); box-shadow: 0 10px 28px color-mix(in srgb, var(--accent) 38%, transparent), 0 2px 6px rgba(0, 0, 0, .12); }
+.fab[hidden] { display: none; }
+.fab-ic { flex: none; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: color-mix(in srgb, #fff 22%, transparent); }
+.fab-ic svg { width: 18px; height: 18px; margin-left: 2px; }
+.fab-tx { display: grid; min-width: 0; line-height: 1.2; }
+.fab-tx b { font-family: var(--font-display); font-size: 16px; }
+.fab-tx small { font-size: 12px; opacity: .85; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fab:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 45%, transparent); outline-offset: 3px; }
+@media (max-width: 720px) {
+  .fab { right: 16px; bottom: calc(88px + env(safe-area-inset-bottom, 0px)); }
+  html.shrink .fab { padding: 7px; gap: 0; }
+  html.shrink .fab .fab-tx { display: none; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .fab { animation: fab-in .4s cubic-bezier(.2, .9, .3, 1.3) both; transition: transform .15s, padding .25s, gap .25s; }
+  .fab:active { transform: scale(.95); }
+  @keyframes fab-in { from { opacity: 0; transform: translateY(16px) scale(.8); } }
+}
+body.focus .fab, body.focus .ptr, body.inq .fab { display: none; }
 .pg-ghost { position: fixed; z-index: 1; margin: 0; max-width: none; pointer-events: none; }
 .pg-ghost .qfoot { display: none; }
 /* Esqueletos de carga: siluetas mientras llega el progreso guardado con tu nombre */
@@ -3227,7 +3269,7 @@ function home() {
   const gnu = $("#go-nums"); if (gnu) gnu.onclick = openNums;
   const gsp = $("#go-speed"); if (gsp) gsp.onclick = openSpeed;
   const gn = $("#go-night"); if (gn) gn.onclick = () => startPractice(shuffle(todayFails()).slice(0, 10), "Repaso antes de dormir");
-  document.querySelectorAll("[data-topic]").forEach(b => b.onclick = () => morphTo(b, () => startPractice(shuffle(Q.filter(q => q.t === b.dataset.topic)), TEMAS[b.dataset.topic].n)));
+  document.querySelectorAll("[data-topic]").forEach(b => b.onclick = () => morphTo(b, () => (prefs.lastTopic = b.dataset.topic, store.set("prefs", prefs), startPractice(shuffle(Q.filter(q => q.t === b.dataset.topic)), TEMAS[b.dataset.topic].n))));
 }
 
 
@@ -5120,8 +5162,10 @@ function render() {
   else if (r === "perfil") profileView();
   else { home(); skelPaint(); }
   decorateHead(r);
-  window.scrollTo(0, 0);
-  checkBadges(); paintFailBadge();
+  // Sin la cabecera fina antes de subir: si no, al crecer la cabecera la página se queda unos píxeles más abajo
+  document.documentElement.classList.remove("shrink"); window.scrollTo(0, 0);
+  checkBadges(); paintFailBadge(); paintFab();
+  document.documentElement.classList.toggle("at-home", r === "inicio");
 }
 let lastRoute = route();
 window.addEventListener("hashchange", () => {
@@ -5149,6 +5193,66 @@ document.addEventListener("click", e => {
   const d = e.target.closest?.("[data-qm]"); if (!d) return;
   const q = Q.find(x => x.id === +d.dataset.qm); if (q) startPractice([q], `Pregunta del mapa · ${TEMAS[q.t].n}`);
 });
+// Botón flotante «Seguir»: el examen, la práctica o la ruta a medias y, si no hay ninguna, el último tema practicado
+const fab = document.createElement("button");
+fab.className = "fab"; fab.hidden = true;
+document.body.append(fab);
+function fabTarget() {
+  const r = route();
+  if (EX && !EX.done && r !== "examen") return { t: "Seguir el examen", s: `${Object.keys(EX.ans).length} de ${EX.qs.length} respondidas · quedan ${fmt(EX.end - Date.now())}`, go: () => go("examen") };
+  if (PR && !PR.done && r !== "practica") return { t: "Seguir practicando", s: `${PR.title} · ${Object.keys(PR.ans).length} de ${PR.qs.length}`, go: () => go("practica") };
+  if (RT && !RT.done && r !== "ruta") return { t: "Seguir la ruta", s: `Parada ${RT.i + 1} de ${RT.stops.length}`, go: () => go("ruta") };
+  const k = prefs.lastTopic;
+  if (!TEMAS[k] || ["examen", "practica", "ruta"].includes(r)) return null;
+  const qs = Q.filter(q => q.t === k), fresh = qs.filter(q => seen[q.id] === undefined);
+  return { t: `Seguir con ${TEMAS[k].n.toLowerCase()}`, s: fresh.length ? `${plural(fresh.length, "pregunta nueva", "preguntas nuevas")} por ver` : "Ya las has visto todas: repásalas",
+    go: () => startPractice([...shuffle(fresh), ...shuffle(qs.filter(q => seen[q.id] !== undefined))], TEMAS[k].n) };
+}
+function paintFab() {
+  const t = fabTarget();
+  fab.hidden = !t; if (!t) return;
+  fab.innerHTML = `<span class="fab-ic"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg></span><span class="fab-tx"><b>${esc(t.t)}</b><small>${esc(t.s)}</small></span>`;
+  fab.setAttribute("aria-label", `${t.t}. ${t.s}`);
+  fab.onclick = () => t.go();
+}
+// Tirar hacia abajo en la portada (pantallas táctiles): un cochecito arranca y se sincroniza el progreso
+{
+  const ptr = document.createElement("div");
+  ptr.className = "ptr"; ptr.setAttribute("role", "status");
+  ptr.innerHTML = `<div class="ptr-in"><span class="ptr-road" aria-hidden="true"><svg class="ptr-car" viewBox="0 0 48 24"><path class="pc-body" d="M3 18v-5q0-3 3-3h7l5-6q1-1 3-1h9q2 0 3 1l5 6h4q3 0 3 3v5z"/><path class="pc-win" d="M15 10l4.5-5h5v5zM27 10V5h4.5l4.5 5z"/><g class="pc-w"><circle cx="13" cy="18" r="4.5"/><line x1="13" y1="15" x2="13" y2="21"/></g><g class="pc-w"><circle cx="36" cy="18" r="4.5"/><line x1="36" y1="15" x2="36" y2="21"/></g></svg></span><span class="ptr-tx"></span></div>`;
+  document.body.append(ptr);
+  const tx = ptr.querySelector(".ptr-tx"), TH = 90;
+  let y0 = null, d = 0, busy = false;
+  const label = s => { if (tx.textContent !== s) tx.textContent = s; };
+  addEventListener("touchstart", e => {
+    if (busy || route() !== "inicio" || scrollY > 30 || e.touches.length > 1 || document.querySelector("dialog[open]")) return;
+    y0 = e.touches[0].clientY; d = 0;
+  }, { passive: true });
+  addEventListener("touchmove", e => {
+    if (y0 === null) return;
+    // Mientras la página aún sube hasta arriba del todo no cuenta: se empieza a medir desde ahí
+    if (scrollY > 0) { y0 = e.touches[0].clientY; return; }
+    d = Math.max(0, e.touches[0].clientY - y0) * .55;
+    ptr.style.setProperty("--p", Math.min(1, d / TH).toFixed(3));
+    ptr.className = "ptr drag" + (d >= TH ? " ready" : "");
+    label(d >= TH ? "Suelta para sincronizar" : "Tira para sincronizar");
+  }, { passive: true });
+  const end = () => {
+    if (y0 === null) return; y0 = null;
+    if (d >= TH) return run();
+    ptr.className = "ptr"; ptr.style.removeProperty("--p");
+  };
+  addEventListener("touchend", end); addEventListener("touchcancel", () => { d = 0; end(); });
+  async function run() {
+    busy = true; ptr.style.removeProperty("--p"); ptr.className = "ptr go"; label("Sincronizando…"); buzz(true);
+    const t0 = Date.now(), name = syncName();
+    if (name) await syncStart(); else render();
+    await new Promise(r => setTimeout(r, Math.max(0, 1100 - (Date.now() - t0))));
+    ptr.className = "ptr done";
+    label(!name ? "Entra con tu nombre para guardar tu progreso" : syncState === "off" ? "Sin conexión: se guardará al volver" : "Progreso al día");
+    setTimeout(() => { ptr.className = "ptr"; busy = false; }, name ? 1300 : 2200);
+  }
+}
 // Clic suave al tocar botones y pestañas (las respuestas ya suenan al corregir)
 document.addEventListener("click", e => {
   const b = e.target.closest?.(".btn, .top-nav a, .htabs button, .seg button, .chips button, .filters button, .topic, .sec-tile, .icon-btn, .grid-nav button, .choice");
