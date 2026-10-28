@@ -615,6 +615,32 @@ h1, h2, h3 { letter-spacing: -.01em; }
   @keyframes fade2 { from { opacity: 0; transform: translateY(8px) scale(.995); } }
   main.enter > * { animation: rise .26s cubic-bezier(.2, .7, .2, 1) both; }
   @keyframes rise { from { opacity: 0; transform: translateY(10px); } }
+  /* Cambio de pantalla como en una app: la nueva entra deslizando y la anterior (.pg-ghost) se va hacia el otro lado */
+  main.enter.fwd > * { animation: pg-in-r .36s .06s cubic-bezier(.2, .8, .2, 1) both; }
+  main.enter.back > * { animation: pg-in-l .36s .06s cubic-bezier(.2, .8, .2, 1) both; }
+  @keyframes pg-in-r { from { opacity: 0; transform: translateX(min(34%, 160px)); } }
+  @keyframes pg-in-l { from { opacity: 0; transform: translateX(max(-34%, -160px)); } }
+  .pg-ghost { animation: pg-out-l .26s cubic-bezier(.4, 0, .7, 1) both; }
+  .pg-ghost.back { animation-name: pg-out-r; }
+  @keyframes pg-out-l { 60% { opacity: 0; } to { opacity: 0; transform: translateX(max(-18%, -90px)); } }
+  @keyframes pg-out-r { 60% { opacity: 0; } to { opacity: 0; transform: translateX(min(18%, 90px)); } }
+  main.sk-in :is(.ready, #next-zone, #plan-zone, #streak-zone, .tring b, .topic-foot, #hpane-prog .section > :not(.section-head), .badges) { animation: sk-in .4s ease both; }
+  @keyframes sk-in { from { opacity: 0; } }
+}
+.pg-ghost { position: fixed; z-index: 1; margin: 0; max-width: none; pointer-events: none; }
+.pg-ghost .qfoot { display: none; }
+/* Esqueletos de carga: siluetas mientras llega el progreso guardado con tu nombre */
+.sk { display: block; flex: none; position: relative; overflow: hidden; background: color-mix(in srgb, var(--fg) 9%, transparent); }
+.sk-row { display: flex; align-items: center; gap: 16px; }
+.sk-row.apart { justify-content: space-between; }
+.sk-col { display: grid; gap: 10px; flex: 1; min-width: 0; }
+.sk-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; border-top: 1px solid var(--line); padding-top: 14px; }
+.sk-card { display: flex; align-items: center; gap: 18px; padding: 20px 22px; background: var(--surface); border: 1px solid color-mix(in srgb, var(--line) 75%, transparent); border-radius: 18px; box-shadow: var(--shadow); }
+.sk-card.tall { align-items: stretch; flex-direction: column; gap: 12px; }
+.topic-foot .sk, .tring .sk { display: inline-block; vertical-align: middle; }
+@media (prefers-reduced-motion: no-preference) {
+  .sk::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%); background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--surface) 60%, transparent), transparent); animation: sk-shine 1.4s ease-in-out infinite; }
+  @keyframes sk-shine { to { transform: translateX(100%); } }
 }
 .section-head h2 { font-size: 30px; }
 .meter { border-radius: 999px; overflow: hidden; }
@@ -2891,12 +2917,45 @@ async function syncDelete() {
 async function syncStart() {
   const name = syncName(); if (!name) return;
   setSync("busy");
-  let row; try { row = await syncPull(name); } catch { return setSync("off"); }
+  // Si el servidor tarda, la portada muestra siluetas en vez de datos que quizá cambien (no tras recargar con lo recién bajado)
+  let fresh = false; try { fresh = !!sessionStorage.getItem("tdgt-synced"); } catch {}
+  const skT = fresh ? 0 : setTimeout(() => skel(true), 150), skMax = setTimeout(() => skel(false), 8000);
+  const skEnd = () => { clearTimeout(skT); clearTimeout(skMax); skel(false); };
+  let row; try { row = await syncPull(name); } catch { skEnd(); return setSync("off"); }
   const same = lsGet("syncname") === name, at = lsGet("syncat") || "", dirty = lsGet("syncdirty");
+  // Si se carga lo guardado, la página se recarga: las siluetas siguen hasta entonces
+  if (row && !same) return Object.keys(seen).length ? syncMerge(row, name) : syncApply(row, name);
+  if (row && row.actualizado > at) return dirty ? syncMerge(row, name) : syncApply(row, name);
+  skEnd();
   if (!row) return syncPush();
-  if (!same) return Object.keys(seen).length ? syncMerge(row, name) : syncApply(row, name);
-  if (row.actualizado > at) return dirty ? syncMerge(row, name) : syncApply(row, name);
   if (dirty) syncPush(); else setSync("ok");
+}
+let skelOn = false;
+function skel(on) {
+  clearTimeout(skel.t);
+  if (skelOn === on) return;
+  skelOn = on; app.toggleAttribute("aria-busy", on);
+  if (typeof route !== "function" || route() !== "inicio" || !$(".htabs")) return;
+  if (on) return skelPaint();
+  home(); app.classList.add("sk-in"); skel.t = setTimeout(() => app.classList.remove("sk-in"), 500);
+}
+const SK = (w, h = 12, r = "6px") => `<i class="sk" style="width:${w};height:${h}px;border-radius:${r}"></i>`;
+function skelPaint() {
+  if (!skelOn) return;
+  const put = (sel, html) => document.querySelectorAll(sel).forEach(el => el.innerHTML = html);
+  put(".ready", `<div class="sk-row apart">${SK("48%", 20)}${SK("26%")}</div>
+    <div class="sk-row">${SK("112px", 112, "50%")}<div class="sk-col">${SK("55%", 18)}${SK("92%")}${SK("78%")}</div></div>
+    <div class="sk-3">${`<div class="sk-col">${SK("50%", 26)}${SK("85%", 10)}</div>`.repeat(3)}</div>
+    <span class="sr-only" role="status">Cargando tu progreso…</span>`);
+  put("#next-zone", `<div class="next-card sk-card">${SK("64px", 64, "16px")}<div class="sk-col">${SK("28%", 10)}${SK("64%", 20)}${SK("82%")}</div></div>`);
+  put("#plan-zone, #streak-zone", `<div class="sk-card tall">${SK("38%", 20)}${SK("90%")}${SK("70%")}${SK("100%", 70, "12px")}</div>`);
+  put(".tring b", SK("30px", 10));
+  put(".topic-foot", `${SK("38%", 10)}${SK("26%", 10)}`);
+  document.querySelectorAll("#hpane-prog > .section").forEach(s => {
+    [...s.children].filter(c => !c.classList.contains("section-head")).forEach((c, i) => i ? c.remove() : c.outerHTML = `<div class="sk-card tall">${SK("30%", 16)}${SK("100%", 150, "12px")}</div>`);
+    if (!s.querySelector(".sk")) s.insertAdjacentHTML("beforeend", `<div class="sk-card tall">${SK("30%", 16)}${SK("100%", 150, "12px")}</div>`);
+  });
+  put(".badges", `<div class="sk-card">${SK("44px", 44, "50%")}<div class="sk-col">${SK("60%", 14)}${SK("85%", 10)}</div></div>`.repeat(6));
 }
 window.addEventListener("online", () => { if (lsGet("syncdirty")) syncPush(); });
 window.addEventListener("offline", () => { if (syncName()) setSync("off"); });
@@ -4224,6 +4283,7 @@ function startExam(kind = "simulado") {
 // Transición: la tarjeta pulsada crece hasta convertirse en la tarjeta de la pregunta (si el navegador lo permite)
 function morphTo(el, run) {
   if (!document.startViewTransition || matchMedia("(prefers-reduced-motion: reduce)").matches) return run();
+  morphing = true;
   el.style.viewTransitionName = "tema";
   el.style.setProperty("--vt-c", getComputedStyle(el).getPropertyValue("--tc"));
   const t = document.startViewTransition(() => new Promise(done => {
@@ -4232,7 +4292,7 @@ function morphTo(el, run) {
     addEventListener("hashchange", () => setTimeout(fin), { once: true });
     run();
   }));
-  t.finished.finally(() => { const c = $(".qcard"); if (c) c.style.viewTransitionName = ""; });
+  t.finished.finally(() => { morphing = false; const c = $(".qcard"); if (c) c.style.viewTransitionName = ""; });
 }
 function startPractice(qs, title) {
   PR = { mode: "practice", title, qs: qs.map(mix), ans: {}, flags: new Set(), i: 0, done: false, view: "q",
@@ -4997,10 +5057,26 @@ function decorateHead(r) {
   h.classList.add("ph-band");
   h.insertAdjacentHTML("beforeend", `<span class="ph-pic" aria-hidden="true">${PIC[HEAD_PIC[r]]}</span>`);
 }
+// Cambio de pantalla como en una app: hacia delante entra por la derecha y al volver, por la izquierda.
+// La pantalla anterior se mueve a una copia fija (.pg-ghost) que se va hacia el otro lado y desaparece.
+const NAV_ORDER = ["inicio", "examen", "senales", "chuleta", "fallos", "fichas", "guia", "buscar", "prioridad", "ruta", "practica", "perfil"];
+let navDir = 0, morphing = false;
+function pageOut(dir) {
+  if (!dir || !app.firstChild || document.hidden || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const r = app.getBoundingClientRect(), g = app.cloneNode(false);
+  g.removeAttribute("id"); g.classList.remove("enter", "fwd", "back", "sk-in"); g.classList.add("pg-ghost", dir > 0 ? "fwd" : "back");
+  g.setAttribute("aria-hidden", "true"); g.inert = true;
+  g.style.cssText = `top:${r.top}px;left:${r.left}px;width:${r.width}px`;
+  g.append(...app.childNodes);
+  document.body.append(g);
+  g.addEventListener("animationend", e => { if (e.target === g) g.remove(); });
+  setTimeout(() => g.remove(), 450);
+}
 let enterT;
 function render() {
   const r = route(); syncFocus(); document.body.classList.remove("inq");
-  app.classList.remove("enter"); void app.offsetWidth; app.classList.add("enter"); clearTimeout(enterT); enterT = setTimeout(() => app.classList.remove("enter"), 400);
+  app.classList.remove("enter", "fwd", "back"); void app.offsetWidth; app.classList.add("enter"); if (navDir) app.classList.add(navDir > 0 ? "fwd" : "back");
+  clearTimeout(enterT); enterT = setTimeout(() => app.classList.remove("enter", "fwd", "back"), 500);
   document.querySelectorAll(".top-nav a").forEach(a => a.dataset.r === r ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current"));
   if (r === "examen") { if (!EX) examIntro(); else if (EX.done && EX.view === "result") resultView(EX); else renderQ(EX); }
   else if (r === "practica") { if (!PR) return go("inicio"); PR.done && PR.view === "result" ? resultView(PR) : renderQ(PR); }
@@ -5013,7 +5089,7 @@ function render() {
   else if (r === "ruta") rutaView();
   else if (r === "buscar") searchView();
   else if (r === "perfil") profileView();
-  else home();
+  else { home(); skelPaint(); }
   decorateHead(r);
   window.scrollTo(0, 0);
   checkBadges(); paintFailBadge();
@@ -5024,8 +5100,11 @@ window.addEventListener("hashchange", () => {
   if (lastRoute === "examen" && EX && EX.done) EX = null;
   if (lastRoute === "practica" && PR && PR.done) PR = null;
   if (lastRoute === "ruta" && RT && RT.done) RT = null;
+  const a = NAV_ORDER.indexOf(lastRoute), b = NAV_ORDER.indexOf(route());
+  navDir = morphing || lastRoute === route() ? 0 : a === -1 ? -1 : b === -1 ? 1 : Math.sign(b - a);
+  pageOut(navDir);
   lastRoute = route();
-  render();
+  render(); navDir = 0;
 });
 document.addEventListener("keydown", e => {
   const S = cur();
