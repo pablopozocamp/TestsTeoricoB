@@ -4403,7 +4403,28 @@ function move(S, d) { const j = S.i + d; if (j < 0 || j >= S.qs.length) return; 
 function toggleFlag(S) { S.flags.has(S.i) ? S.flags.delete(S.i) : S.flags.add(S.i); renderQ(S); }
 
 // Vibración corta al acertar y doble al fallar (solo navegadores que la permiten, como Chrome en Android)
-const buzz = ok => { try { if (prefs.vibe !== false && navigator.vibrate) navigator.vibrate(ok ? 25 : [45, 70, 45]); } catch (e) {} };
+// Sonidos suaves (opcionales, apagados al empezar): se generan con Web Audio, sin archivos de sonido
+let AC = null;
+function sfx(kind) {
+  if (prefs.sound !== true || document.hidden) return;
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    if (AC.state === "suspended") AC.resume();
+    const t0 = AC.currentTime + .01;
+    const tone = (f, at, dur, vol, type = "sine", f2) => {
+      const o = AC.createOscillator(), g = AC.createGain(), s = t0 + at;
+      o.type = type; o.frequency.setValueAtTime(f, s); if (f2) o.frequency.exponentialRampToValueAtTime(f2, s + dur);
+      g.gain.setValueAtTime(.0001, s); g.gain.exponentialRampToValueAtTime(vol, s + .012); g.gain.exponentialRampToValueAtTime(.0001, s + dur);
+      o.connect(g).connect(AC.destination); o.start(s); o.stop(s + dur + .02);
+    };
+    if (kind === "tap") tone(1500, 0, .04, .025, "sine", 1000);
+    else if (kind === "ok") { tone(659.3, 0, .16, .1); tone(987.8, .08, .32, .09); }
+    else if (kind === "bad") { tone(233, 0, .18, .09, "triangle", 220); tone(185, .11, .3, .09, "triangle", 170); }
+    else if (kind === "win") [523.3, 659.3, 784, 1046.5].forEach((f, i) => tone(f, i * .1, i === 3 ? .7 : .22, .08));
+    else if (kind === "badge") [1318.5, 1760, 2093].forEach((f, i) => tone(f, i * .07, .28, .04));
+  } catch {}
+}
+const buzz = ok => { sfx(ok ? "ok" : "bad"); try { if (prefs.vibe !== false && navigator.vibrate) navigator.vibrate(ok ? 25 : [45, 70, 45]); } catch (e) {} };
 function choose(S, k) {
   const q = S.qs[S.i];
   S.ans[S.i] = k;
@@ -4567,7 +4588,7 @@ function resultView(S) {
   };
   draw(bad ? "bad" : "all");
   document.querySelectorAll(".res-sq [data-rev]").forEach(b => b.onclick = () => { S.i = +b.dataset.rev; renderQ(S); window.scrollTo(0, 0); });
-  if (isExam && pass && !S.party) { S.party = true; confetti(); }
+  if (isExam && pass && !S.party) { S.party = true; confetti(); sfx("win"); }
   document.querySelectorAll("[data-f]").forEach(b => b.onclick = () => draw(b.dataset.f));
   $("#again").onclick = () => isExam ? startExam(S.kind) : startPractice(shuffle(S.qs), S.title);
   const pf = $("#practice-failed"); if (pf) pf.onclick = () => startPractice(shuffle(failedQs), "Repaso de fallos");
@@ -4790,6 +4811,7 @@ function openSettings() {
     <label class="opt-toggle" for="p-auto2"><input type="checkbox" id="p-auto2" ${prefs.autoNext ? "checked" : ""}><span><b>Pasar solo a la siguiente</b><small>En el examen, al elegir una respuesta se pasa a la siguiente pregunta.</small></span></label>
     <label class="opt-toggle" for="p-kw"><input type="checkbox" id="p-kw" ${prefs.kw !== false ? "checked" : ""}><span><b>Resaltar palabras clave al corregir</b><small>Marca las palabras que decidían la respuesta: «siempre», «salvo», «turismo», «interurbana», las cifras…</small></span></label>
     ${"vibrate" in navigator ? `<label class="opt-toggle" for="p-vibe"><input type="checkbox" id="p-vibe" ${prefs.vibe !== false ? "checked" : ""}><span><b>Vibrar al responder</b><small>Un toque al acertar y dos al fallar en la práctica.</small></span></label>` : ""}
+    <label class="opt-toggle" for="p-sound"><input type="checkbox" id="p-sound" ${prefs.sound === true ? "checked" : ""}><span><b>Sonidos suaves</b><small>Un clic al tocar, un tono alegre al acertar y uno grave al fallar. Se oyen con el volumen del móvil.</small></span></label>
     ${remindHTML()}
     ${who() ? `<button class="link-danger" id="p-wipe">Borrar mis datos guardados en internet</button>` : ""}`);
   bindRemind();
@@ -4800,6 +4822,7 @@ function openSettings() {
   });
   $("#p-auto2").onchange = e => { prefs.autoNext = e.target.checked; store.set("prefs", prefs); };
   $("#p-kw").onchange = e => { prefs.kw = e.target.checked; store.set("prefs", prefs); };
+  $("#p-sound").onchange = e => { prefs.sound = e.target.checked; store.set("prefs", prefs); sfx("ok"); };
   const vb = $("#p-vibe"); if (vb) vb.onchange = () => { prefs.vibe = vb.checked; store.set("prefs", prefs); if (vb.checked) buzz(true); };
   const w = $("#p-wipe"); if (w) w.onclick = openWipe;
 }
@@ -5030,6 +5053,7 @@ function checkBadges() {
 }
 // Medalla grande en el centro con brillo metálico; al terminar (o al tocarla) se guarda y sale el aviso de siempre
 function medalPop(b, done) {
+  sfx("badge");
   if (matchMedia("(prefers-reduced-motion: reduce)").matches || document.querySelector(".medal-pop")) return done();
   const m = document.createElement("div");
   m.className = "medal-pop"; m.setAttribute("role", "status");
@@ -5119,6 +5143,11 @@ document.addEventListener("keydown", e => {
 document.addEventListener("click", e => {
   const d = e.target.closest?.("[data-qm]"); if (!d) return;
   const q = Q.find(x => x.id === +d.dataset.qm); if (q) startPractice([q], `Pregunta del mapa · ${TEMAS[q.t].n}`);
+});
+// Clic suave al tocar botones y pestañas (las respuestas ya suenan al corregir)
+document.addEventListener("click", e => {
+  const b = e.target.closest?.(".btn, .top-nav a, .htabs button, .seg button, .chips button, .filters button, .topic, .sec-tile, .icon-btn, .grid-nav button, .choice");
+  if (b && !b.disabled && !b.closest(".opt")) sfx("tap");
 });
 // Iconos de la barra inferior: pequeño salto al tocarlos
 document.addEventListener("click", e => {
