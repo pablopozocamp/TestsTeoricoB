@@ -4408,20 +4408,25 @@ let AC = null;
 function sfx(kind) {
   if (prefs.sound !== true || document.hidden) return;
   try {
+    // En iPhone, sin esto el interruptor de silencio apaga estos sonidos («transient» baja un momento la música y no la corta)
+    try { if (navigator.audioSession && navigator.audioSession.type !== "transient") navigator.audioSession.type = "transient"; } catch {}
     AC = AC || new (window.AudioContext || window.webkitAudioContext)();
-    if (AC.state === "suspended") AC.resume();
-    const t0 = AC.currentTime + .01;
-    const tone = (f, at, dur, vol, type = "sine", f2) => {
-      const o = AC.createOscillator(), g = AC.createGain(), s = t0 + at;
-      o.type = type; o.frequency.setValueAtTime(f, s); if (f2) o.frequency.exponentialRampToValueAtTime(f2, s + dur);
-      g.gain.setValueAtTime(.0001, s); g.gain.exponentialRampToValueAtTime(vol, s + .012); g.gain.exponentialRampToValueAtTime(.0001, s + dur);
-      o.connect(g).connect(AC.destination); o.start(s); o.stop(s + dur + .02);
+    const play = () => {
+      const t0 = AC.currentTime + .02;
+      const tone = (f, at, dur, vol, type = "sine", f2) => {
+        const o = AC.createOscillator(), g = AC.createGain(), s = t0 + at;
+        o.type = type; o.frequency.setValueAtTime(f, s); if (f2) o.frequency.exponentialRampToValueAtTime(f2, s + dur);
+        g.gain.setValueAtTime(.0001, s); g.gain.exponentialRampToValueAtTime(vol, s + .012); g.gain.exponentialRampToValueAtTime(.0001, s + dur);
+        o.connect(g).connect(AC.destination); o.start(s); o.stop(s + dur + .02);
+      };
+      if (kind === "tap") tone(1500, 0, .05, .08, "sine", 1000);
+      else if (kind === "ok") { tone(659.3, 0, .18, .32); tone(987.8, .09, .36, .3); }
+      else if (kind === "bad") { tone(233, 0, .2, .32, "triangle", 220); tone(185, .12, .34, .32, "triangle", 170); }
+      else if (kind === "win") [523.3, 659.3, 784, 1046.5].forEach((f, i) => tone(f, i * .1, i === 3 ? .7 : .24, .26));
+      else if (kind === "badge") [1318.5, 1760, 2093].forEach((f, i) => tone(f, i * .07, .3, .14));
     };
-    if (kind === "tap") tone(1500, 0, .04, .025, "sine", 1000);
-    else if (kind === "ok") { tone(659.3, 0, .16, .1); tone(987.8, .08, .32, .09); }
-    else if (kind === "bad") { tone(233, 0, .18, .09, "triangle", 220); tone(185, .11, .3, .09, "triangle", 170); }
-    else if (kind === "win") [523.3, 659.3, 784, 1046.5].forEach((f, i) => tone(f, i * .1, i === 3 ? .7 : .22, .08));
-    else if (kind === "badge") [1318.5, 1760, 2093].forEach((f, i) => tone(f, i * .07, .28, .04));
+    // Si el navegador tenía el audio dormido, se espera a que despierte antes de sonar
+    AC.state === "running" ? play() : AC.resume().then(play, () => {});
   } catch {}
 }
 const buzz = ok => { sfx(ok ? "ok" : "bad"); try { if (prefs.vibe !== false && navigator.vibrate) navigator.vibrate(ok ? 25 : [45, 70, 45]); } catch (e) {} };
@@ -4811,7 +4816,7 @@ function openSettings() {
     <label class="opt-toggle" for="p-auto2"><input type="checkbox" id="p-auto2" ${prefs.autoNext ? "checked" : ""}><span><b>Pasar solo a la siguiente</b><small>En el examen, al elegir una respuesta se pasa a la siguiente pregunta.</small></span></label>
     <label class="opt-toggle" for="p-kw"><input type="checkbox" id="p-kw" ${prefs.kw !== false ? "checked" : ""}><span><b>Resaltar palabras clave al corregir</b><small>Marca las palabras que decidían la respuesta: «siempre», «salvo», «turismo», «interurbana», las cifras…</small></span></label>
     ${"vibrate" in navigator ? `<label class="opt-toggle" for="p-vibe"><input type="checkbox" id="p-vibe" ${prefs.vibe !== false ? "checked" : ""}><span><b>Vibrar al responder</b><small>Un toque al acertar y dos al fallar en la práctica.</small></span></label>` : ""}
-    <label class="opt-toggle" for="p-sound"><input type="checkbox" id="p-sound" ${prefs.sound === true ? "checked" : ""}><span><b>Sonidos suaves</b><small>Un clic al tocar, un tono alegre al acertar y uno grave al fallar. Se oyen con el volumen del móvil.</small></span></label>
+    <label class="opt-toggle" for="p-sound"><input type="checkbox" id="p-sound" ${prefs.sound === true ? "checked" : ""}><span><b>Sonidos suaves</b><small>Un clic al tocar, un tono alegre al acertar y uno grave al fallar. Se oyen con el volumen del móvil, también con el iPhone en silencio.</small></span></label>
     ${remindHTML()}
     ${who() ? `<button class="link-danger" id="p-wipe">Borrar mis datos guardados en internet</button>` : ""}`);
   bindRemind();
