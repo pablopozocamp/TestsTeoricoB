@@ -1077,6 +1077,7 @@ svg:not(.qimg svg, #modal svg, #lightbox svg) * { animation: none !important; }
 .empty.art p { margin: 0; max-width: 46ch; }
 .hero-band .btn-primary { color: var(--hb2); }
 .hero-band .btn-primary:hover:not(:disabled) { background: color-mix(in srgb, var(--hb1) 8%, #fff); }
+.sync-note { font-size: 13px; color: var(--muted); margin-top: 10px; }
 </style>
 <style>body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
 </head>
@@ -2211,8 +2212,48 @@ for (const [k, ids] of Object.entries(IMG_ID)) ids.forEach(i => { if (Q[i] && !Q
 const EXAM_N = 30, EXAM_MIN = 30, MAX_FAILS = 3;
 const store = {
   get(k, d) { try { const v = localStorage.getItem("tdgt-" + k); return v ? JSON.parse(v) : d; } catch { return d; } },
-  set(k, v) { try { localStorage.setItem("tdgt-" + k, JSON.stringify(v)); } catch {} },
+  set(k, v) { try { localStorage.setItem("tdgt-" + k, JSON.stringify(v)); } catch {} if (SYNC_KEYS.includes(k)) syncLater(); },
 };
+/* Copia del progreso en el servidor (Supabase) por nombre exacto: otro navegador con el mismo nombre carga los mismos datos.
+   Sin contraseña: cualquiera que escriba el mismo nombre ve y cambia esos datos (lo eligió así el dueño de la web). */
+const SYNC = { url: "https://udqnvdlgitfknkwujsnb.supabase.co/rest/v1/progreso", key: "sb_publishable_TqzSClSoRI5cluT6-cay0Q_Dnlnge65" };
+const SYNC_KEYS = ["seen", "fails", "history", "daily", "badges", "known", "planday", "failday", "deck", "bring", "prefs", "theme"];
+const syncName = () => { try { return (JSON.parse(localStorage.getItem("tdgt-prefs") || "{}").name || "").trim(); } catch { return ""; } };
+const lsGet = k => { try { return localStorage.getItem("tdgt-" + k); } catch { return null; } };
+const lsSet = (k, v) => { try { v === null ? localStorage.removeItem("tdgt-" + k) : localStorage.setItem("tdgt-" + k, v); } catch {} };
+let syncT = 0;
+function syncLater() { if (!syncName()) return; lsSet("syncdirty", "1"); clearTimeout(syncT); syncT = setTimeout(syncPush, 2500); }
+async function syncPull(name) {
+  const r = await fetch(`${SYNC.url}?nombre=eq.${encodeURIComponent(name)}&select=datos,actualizado`, { headers: { apikey: SYNC.key } });
+  if (!r.ok) throw new Error("sync " + r.status);
+  return (await r.json())[0] || null;
+}
+function syncPush(keepalive = false) {
+  const name = syncName(); if (!name) return Promise.resolve();
+  clearTimeout(syncT);
+  const at = new Date().toISOString(), datos = {};
+  SYNC_KEYS.forEach(k => { const v = lsGet(k); if (v !== null) datos[k] = JSON.parse(v); });
+  return fetch(SYNC.url, { method: "POST", keepalive, headers: { apikey: SYNC.key, "Content-Type": "application/json", Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify({ nombre: name, datos, actualizado: at }) })
+    .then(r => { if (r.ok && syncName() === name) { lsSet("syncat", at); lsSet("syncname", name); lsSet("syncdirty", null); } }).catch(() => {});
+}
+function syncApply(row, name) {
+  SYNC_KEYS.forEach(k => lsSet(k, k in row.datos ? JSON.stringify(row.datos[k]) : null));
+  const pr = row.datos.prefs || {}; pr.name = name; lsSet("prefs", JSON.stringify(pr));
+  lsSet("syncat", row.actualizado); lsSet("syncname", name); lsSet("syncdirty", null);
+  try { sessionStorage.setItem("tdgt-synced", name); } catch {}
+  location.reload();
+}
+// Al abrir la web: si otro navegador guardó algo más nuevo con este nombre, se carga; si no, se sube lo de aquí
+async function syncStart() {
+  const name = syncName(); if (!name) return;
+  let row; try { row = await syncPull(name); } catch { return; }
+  const same = lsGet("syncname") === name, at = lsGet("syncat") || "", dirty = lsGet("syncdirty");
+  if (!row) return syncPush();
+  if (!same) return syncAsk(row, name);
+  if (row.actualizado > at && !dirty) return syncApply(row, name);
+  if (dirty) syncPush();
+}
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden" && lsGet("syncdirty")) syncPush(true); });
 let fails = new Set(store.get("fails", []));
 let seen = store.get("seen", {});          // id -> 1 acertada / 0 fallada (último intento)
 let history = store.get("history", []);    // {date, ok, n, pass, secs}
@@ -3464,6 +3505,17 @@ function drawResults() {
 
 /* ---------- Ventana modal (zoom y perfil) ---------- */
 const modal = $("#modal");
+function syncAsk(row, name) {
+  const theirs = Object.keys(row.datos.seen || {}).length, mine = Object.keys(seen).length;
+  if (!mine) return syncApply(row, name);
+  const when = new Date(row.actualizado).toLocaleString("es-ES", { dateStyle: "long", timeStyle: "short" });
+  openModal("Ya hay progreso con este nombre", `<p>Con el nombre <b>${esc(name)}</b> hay progreso guardado desde otro navegador: <b>${plural(theirs, "pregunta vista", "preguntas vistas")}</b>, actualizado el ${when}.</p>
+    <p>En este navegador tienes ${plural(mine, "pregunta vista", "preguntas vistas")}. ¿Con cuál te quedas?</p>
+    <div class="btn-row"><button class="btn btn-primary" id="sy-load">Cargar el guardado</button><button class="btn" id="sy-keep">Quedarme con el de aquí</button></div>
+    <p class="sync-note">Si te quedas con el de aquí, se sustituye el guardado con ese nombre.</p>`);
+  $("#sy-load").onclick = () => syncApply(row, name);
+  $("#sy-keep").onclick = () => { modal.close(); syncPush(); };
+}
 function openModal(title, html) {
   $("#modal-in").innerHTML = `<div class="modal-head"><h2>${title}</h2><button class="icon-btn" id="modal-close" aria-label="Cerrar">${ICON.close}</button></div>${html}`;
   $("#modal-close").onclick = () => modal.close();
@@ -3513,7 +3565,7 @@ document.addEventListener("click", e => {
 const who = () => (prefs.name || "").trim();
 function paintProfile() { const b = $("#profile-btn"); b.innerHTML = ICON.user + (who() ? `<span>${esc(who())}</span>` : ""); b.title = who() ? `Alumno: ${who()}` : "Poner tu nombre"; }
 $("#profile-btn").onclick = () => {
-  openModal("Perfil del alumno", `<label class="field" for="p-name">Tu nombre<input id="p-name" maxlength="40" autocomplete="name" value="${esc(who())}" placeholder="Por ejemplo: Laura Pérez"><small>Aparece en la cabecera y en tus resultados, para enseñárselos a tu profesor. Se guarda solo en este navegador.</small></label>
+  openModal("Perfil del alumno", `<label class="field" for="p-name">Tu nombre<input id="p-name" maxlength="40" autocomplete="name" value="${esc(who())}" placeholder="Por ejemplo: Laura Pérez"><small>Aparece en la cabecera y en tus resultados. Tu progreso se guarda con este nombre: si lo escribes exactamente igual en otro navegador, se cargan tus datos. Cualquiera que ponga el mismo nombre también los verá.</small></label>
     <span class="field-l" id="sw-l">Color de la web <span class="sw-name" id="sw-name">· ${(ACCENTS.find(x => x[0] === (prefs.accent || "azul")) || ACCENTS[0])[1]}</span></span>
     <div class="swatches" role="radiogroup" aria-labelledby="sw-l">${ACCENTS.map(([k, n, c]) => `<button role="radio" aria-checked="${(prefs.accent || "azul") === k}" aria-label="${n}" title="${n}" data-acc="${k}" style="--sw:${c}">${ICON.check2}</button>`).join("")}</div>
     ${"vibrate" in navigator ? `<label class="opt-toggle" for="p-vibe"><input type="checkbox" id="p-vibe" ${prefs.vibe !== false ? "checked" : ""}><span><b>Vibrar al responder</b><small>Un toque al acertar y dos al fallar en la práctica.</small></span></label>` : ""}
@@ -3525,12 +3577,17 @@ $("#profile-btn").onclick = () => {
     $("#sw-name").textContent = "· " + b.title;
   });
   const vb = $("#p-vibe"); if (vb) vb.onchange = () => { prefs.vibe = vb.checked; store.set("prefs", prefs); if (vb.checked) buzz(true); };
-  const save = v => { prefs.name = v; store.set("prefs", prefs); paintProfile(); modal.close(); render(); };
+  const save = v => {
+    const old = who(); prefs.name = v; store.set("prefs", prefs); paintProfile(); modal.close(); render();
+    if (v && v !== old) { lsSet("syncname", null); syncStart(); }
+  };
   $("#p-save").onclick = () => save(inp.value.trim());
   inp.onkeydown = e => { if (e.key === "Enter") save(inp.value.trim()); };
   const d = $("#p-del"); if (d) d.onclick = () => save("");
 };
 paintProfile();
+syncStart();
+try { if (sessionStorage.getItem("tdgt-synced")) { sessionStorage.removeItem("tdgt-synced"); setTimeout(() => { const t = document.createElement("div"); t.className = "toast"; t.setAttribute("role", "status"); t.innerHTML = `<div><b>Progreso cargado</b><small>Los datos de «${esc(who())}» ya están en este navegador.</small></div>`; document.body.appendChild(t); setTimeout(() => t.remove(), 4000); }, 300); } } catch {}
 
 /* ---------- Ayuda en práctica ----------
    Recuerda la norma que se aplica a la pregunta, según su tema, sin marcar la opción correcta. */
