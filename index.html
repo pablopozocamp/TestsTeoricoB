@@ -4445,31 +4445,56 @@ function move(S, d) { const j = S.i + d; if (j < 0 || j >= S.qs.length) return; 
 function toggleFlag(S) { S.flags.has(S.i) ? S.flags.delete(S.i) : S.flags.add(S.i); renderQ(S); }
 
 // Vibración corta al acertar y doble al fallar (solo navegadores que la permiten, como Chrome en Android)
-// Sonidos suaves (opcionales, apagados al empezar): se generan con Web Audio, sin archivos de sonido
-let AC = null;
+// Sonidos suaves (opcionales, apagados al empezar): se generan con Web Audio, sin archivos de sonido.
+// Timbre de mazo suave (como una marimba) con un poco de eco y un compresor para que ninguno suene fuerte.
+function sfxBus(ac) {
+  const inp = ac.createGain(), lp = ac.createBiquadFilter(), comp = ac.createDynamicsCompressor(), rev = ac.createConvolver(), wet = ac.createGain();
+  lp.type = "lowpass"; lp.frequency.value = 6500;
+  comp.threshold.value = -16; comp.knee.value = 12; comp.ratio.value = 3; comp.attack.value = .003; comp.release.value = .2;
+  const n = Math.round(ac.sampleRate * .8), ir = ac.createBuffer(2, n, ac.sampleRate);
+  for (let c = 0; c < 2; c++) { const d = ir.getChannelData(c); for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3.5); }
+  rev.buffer = ir; wet.gain.value = .22;
+  inp.connect(lp); lp.connect(comp); lp.connect(rev); rev.connect(wet); wet.connect(comp); comp.connect(ac.destination);
+  return inp;
+}
+function sfxPlay(ac, out, kind, t) {
+  // Una nota: la fundamental y un armónico brillante que se apaga antes (golpe de mazo)
+  const note = (f, at, dur, vol, o = {}) => {
+    const s = t + at, parts = [[1, 1, dur]];
+    if (o.hv !== 0) parts.push([o.h || 4, o.hv || .16, dur * .3]);
+    parts.forEach(([m, v, d]) => {
+      const osc = ac.createOscillator(), g = ac.createGain();
+      osc.type = "sine"; osc.frequency.setValueAtTime(f * m, s);
+      if (o.glide) osc.frequency.exponentialRampToValueAtTime(f * m * o.glide, s + d);
+      g.gain.setValueAtTime(0, s); g.gain.linearRampToValueAtTime(vol * v, s + (o.att || .005)); g.gain.exponentialRampToValueAtTime(.0001, s + d);
+      osc.connect(g).connect(out); osc.start(s); osc.stop(s + d + .05);
+    });
+  };
+  if (kind === "tap") note(620, 0, .06, .2, { glide: .55, hv: 0, att: .002 });
+  else if (kind === "ok") { note(1046.5, 0, .4, .26); note(1568, .08, .7, .24); }
+  else if (kind === "bad") { note(392, 0, .3, .3, { h: 2, hv: .1, glide: .97, att: .01 }); note(311.1, .14, .5, .3, { h: 2, hv: .1, glide: .96, att: .01 }); }
+  else if (kind === "win") { [523.3, 659.3, 784, 1046.5].forEach((f, i) => note(f, i * .09, .45, .2)); [523.3, 659.3, 784, 1046.5].forEach(f => note(f, .38, 1.5, .08, { hv: .08, att: .03 })); }
+  else if (kind === "badge") [1568, 2093, 2637, 3136].forEach((f, i) => note(f, i * .065, .5, .09, { hv: .1 }));
+}
+let AC = null, BUS = null;
+// El iPhone «duerme» el audio al cambiar de app, con una llamada o tras un rato: entonces se tira y el siguiente toque crea uno nuevo
+function sfxReset() { if (AC && AC.state !== "closed") { try { AC.close().catch(() => {}); } catch {} } AC = BUS = null; }
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && AC && AC.state !== "running") sfxReset(); });
+addEventListener("pageshow", e => { if (e.persisted) sfxReset(); });
 function sfx(kind) {
   if (prefs.sound !== true || document.hidden) return;
   try {
     // En iPhone, sin esto el interruptor de silencio apaga estos sonidos («transient» baja un momento la música y no la corta)
     try { if (navigator.audioSession && navigator.audioSession.type !== "transient") navigator.audioSession.type = "transient"; } catch {}
-    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
-    const play = () => {
-      const t0 = AC.currentTime + .02;
-      const tone = (f, at, dur, vol, type = "sine", f2) => {
-        const o = AC.createOscillator(), g = AC.createGain(), s = t0 + at;
-        o.type = type; o.frequency.setValueAtTime(f, s); if (f2) o.frequency.exponentialRampToValueAtTime(f2, s + dur);
-        g.gain.setValueAtTime(.0001, s); g.gain.exponentialRampToValueAtTime(vol, s + .012); g.gain.exponentialRampToValueAtTime(.0001, s + dur);
-        o.connect(g).connect(AC.destination); o.start(s); o.stop(s + dur + .02);
-      };
-      if (kind === "tap") tone(1500, 0, .05, .08, "sine", 1000);
-      else if (kind === "ok") { tone(659.3, 0, .18, .32); tone(987.8, .09, .36, .3); }
-      else if (kind === "bad") { tone(233, 0, .2, .32, "triangle", 220); tone(185, .12, .34, .32, "triangle", 170); }
-      else if (kind === "win") [523.3, 659.3, 784, 1046.5].forEach((f, i) => tone(f, i * .1, i === 3 ? .7 : .24, .26));
-      else if (kind === "badge") [1318.5, 1760, 2093].forEach((f, i) => tone(f, i * .07, .3, .14));
-    };
-    // Si el navegador tenía el audio dormido, se espera a que despierte antes de sonar
-    AC.state === "running" ? play() : AC.resume().then(play, () => {});
-  } catch {}
+    if (AC && (AC.state === "closed" || AC.state === "interrupted")) sfxReset();
+    if (!AC) { AC = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: "interactive" }); BUS = sfxBus(AC); }
+    const ac = AC, bus = BUS;
+    if (ac.state === "running") return sfxPlay(ac, bus, kind, ac.currentTime + .01);
+    // Si estaba dormido se despierta; si no despierta enseguida, se descarta y el siguiente toque empieza con uno nuevo
+    let ok = false;
+    ac.resume().then(() => { ok = true; if (AC === ac) sfxPlay(ac, bus, kind, ac.currentTime + .01); }, () => {});
+    setTimeout(() => { if (!ok && AC === ac) sfxReset(); }, 350);
+  } catch { sfxReset(); }
 }
 const buzz = ok => { sfx(ok ? "ok" : "bad"); try { if (prefs.vibe !== false && navigator.vibrate) navigator.vibrate(ok ? 25 : [45, 70, 45]); } catch (e) {} };
 function choose(S, k) {
