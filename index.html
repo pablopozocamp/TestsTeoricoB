@@ -3391,7 +3391,7 @@ let pvMode = "simulado", pvTok = 0;
 const PV_MODES = [["simulado", "Simulado"], ["real", "Realista"], ["refuerzo", "Refuerzo"]];
 const PV_TXT = {
   simulado: ["30 preguntas al azar de todos los temas.", "Ves el tema de cada pregunta y la cuadrícula para saltar entre ellas.", "Puedes marcar las dudosas y cambiar tus respuestas hasta corregir."],
-  real: ["Sin menús, sin temas y sin marcar dudas: solo el reloj y las preguntas.", "No pasa solo a la siguiente; tú pulsas «Siguiente».", "La dificultad es siempre normal, como el día de la prueba."],
+  real: ["Sin menús, sin temas y sin botón para marcar dudas: solo el reloj y las preguntas.", "No pasa solo a la siguiente; tú pulsas «Siguiente».", "La dificultad es siempre normal, como el día de la prueba."],
   refuerzo: ["Más preguntas de tus fallos y de los temas en los que aciertas menos.", "Con cuadrícula, temas y marcas, como el simulado.", "Para atacar tus puntos débiles antes del examen."],
 };
 function previewHTML() {
@@ -3405,6 +3405,7 @@ async function pvRun() {
   const scr = $("#pv-screen"), cur = $("#pv-cur"), mode = pvMode, diff = mode === "real" ? "normal" : prefs.diff || "normal";
   const auto = mode !== "real" && prefs.autoNext;
   $("#pv-now").textContent = `${PV_MODES.find(x => x[0] === mode)[1]} · ${DIFF[diff].n}`;
+  const hf = $("#how-flag"); if (hf) hf.innerHTML = mode === "real" ? `<span class="ic">${ICON.clock}</span><div><b>Sin marcar dudas</b><small>En el simulacro realista no se pueden marcar preguntas para revisar. Sí puedes moverte entre ellas y cambiar tus respuestas hasta corregir.</small></div>` : `<span class="ic">${ICON.flag}</span><div><b>Marca las dudosas</b><small>Puedes moverte entre preguntas y cambiar tus respuestas hasta corregir.</small></div>`;
   $("#pv-notes").innerHTML = [...PV_TXT[mode], mode === "real" ? "" : `Dificultad ${DIFF[diff].n.toLowerCase()}: ${DIFF[diff].d.charAt(0).toLowerCase() + DIFF[diff].d.slice(1)}`, mode === "real" ? "" : auto ? "Al responder pasa sola a la siguiente pregunta." : "Al responder, tú pulsas «Siguiente»."].filter(Boolean).map(t => `<li>${ICON.check2}<span>${t}</span></li>`).join("");
   const pool = byDiff(diff).filter(q => q.img && q.q.length < 100 && q.o.every(o => o.length < 75));
   const qs = shuffle(pool).slice(0, 3), ans = {}, flags = new Set();
@@ -3412,11 +3413,12 @@ async function pvRun() {
   const alive = () => tok === pvTok && document.contains(root);
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const draw = slide => {
+    if (!alive()) return;
     const q = qs[i];
     scr.className = `pv-screen m-${mode}${slide ? " in" : ""}`;
     scr.innerHTML = `<div class="pv-bar"><div><small>${mode === "real" ? "Simulacro realista" : "Examen · Permiso B"}</small>${mode === "real" ? "" : `<b>${mode === "refuerzo" ? "Examen de refuerzo" : "Examen simulado"}</b>`}</div><span class="pv-timer">${ICON.clock}<i id="pv-t">${fmt(secs * 1000)}</i></span></div>
       <div class="pv-prog">${[...Array(10)].map((_, j) => `<i class="${ans[j] !== undefined ? "on" : ""}${j === i ? " cur" : ""}"></i>`).join("")}</div>
-      ${mode === "real" ? "" : `<div class="pv-grid">${[...Array(10)].map((_, j) => `<i class="${ans[j] !== undefined ? "on" : ""}${j === i ? " cur" : ""}${flags.has(j) ? " fl" : ""}">${j + 1}</i>`).join("")}</div>`}
+      <div class="pv-grid">${[...Array(10)].map((_, j) => `<i class="${ans[j] !== undefined ? "on" : ""}${j === i ? " cur" : ""}${flags.has(j) ? " fl" : ""}">${j + 1}</i>`).join("")}</div>
       <div class="pv-q"><span class="pv-img">${imgHTML(q.img)}</span><div class="pv-body">
         <div class="pv-meta"><span>Pregunta ${i + 1} de 30</span>${mode === "real" ? "" : `<span class="tema" style="--tc:var(--t-${q.t})">${TEMAS[q.t].n}</span>`}${mode === "refuerzo" && i !== 1 ? `<span class="pv-tag">De tus fallos</span>` : ""}${diff !== "normal" ? `<span class="pv-tag d">${DIFF[diff].n}</span>` : ""}${flags.has(i) ? `<span class="pv-tag fl">Marcada</span>` : ""}</div>
         <p>${esc(q.q)}</p>
@@ -3436,6 +3438,7 @@ async function pvRun() {
   cur.hidden = false; cur.style.transform = "translate(70%, 110%)";
   const tick = setInterval(() => { if (!alive()) return clearInterval(tick); secs--; const t = $("#pv-t"); if (t) t.textContent = fmt(secs * 1000); }, 1000);
   for (; i < qs.length; i++) {
+    if (!alive()) return;
     if (i) { draw(true); await wait(500); }
     if (!alive()) return;
     await wait(700);
@@ -3459,7 +3462,7 @@ function examIntro() {
         <li><span class="ic">30</span><div><b>30 preguntas de todos los temas</b><small>Cada una con tres respuestas y solo una correcta.</small></div></li>
         <li><span class="ic">${ICON.clock}</span><div><b>30 minutos</b><small>Al acabar el tiempo, el examen se corrige solo.</small></div></li>
         <li><span class="ic">3</span><div><b>Apto con 3 fallos como máximo</b><small>Las preguntas sin responder cuentan como fallo.</small></div></li>
-        <li><span class="ic">${ICON.flag}</span><div><b>Marca las dudosas</b><small>Puedes moverte entre preguntas y cambiar tus respuestas hasta corregir.</small></div></li>
+        <li id="how-flag"><span class="ic">${ICON.flag}</span><div><b>Marca las dudosas</b><small>Puedes moverte entre preguntas y cambiar tus respuestas hasta corregir.</small></div></li>
       </ul>
     </div>
     ${previewHTML()}
