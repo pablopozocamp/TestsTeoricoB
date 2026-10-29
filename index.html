@@ -1651,6 +1651,26 @@ html.shrink .top { box-shadow: 0 6px 20px -10px rgba(16, 28, 54, .28); }
 .btn:focus-visible, .opt:focus-visible, .topic:focus-visible, .icon-btn:focus-visible, .seg button:focus-visible, .sp-chips button:focus-visible, .filters button:focus-visible,
 .chips button:focus-visible, .gaps button:focus-visible, .goal button:focus-visible, .htabs button:focus-visible, .grid-nav button:focus-visible {
   outline: none; box-shadow: 0 0 0 2px var(--bg, #fff), 0 0 0 5px color-mix(in srgb, var(--accent) 55%, transparent); }
+
+/* ===== Logros holográficos: reflejo de arcoíris que sigue al dedo o al ratón ===== */
+.badge { position: relative; overflow: hidden; isolation: isolate; --mx: 50%; --my: 50%; --hx: 0; --hy: 0; }
+.badge .holo { position: relative; display: block; width: 44px; height: 44px; transition: transform .35s cubic-bezier(.2, .8, .2, 1); transform-style: preserve-3d; }
+.badge .holo svg { display: block; }
+.badge.on .holo::after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 1; clip-path: circle(32% at 50% 60.4%);
+  background: linear-gradient(115deg, transparent 25%, #ff5ec8 36%, #ffe45c 44%, #6dffb0 52%, #55d6ff 60%, #a77bff 68%, transparent 78%) var(--mx) var(--my) / 300% 300% no-repeat;
+  mix-blend-mode: hard-light; opacity: .4; transition: opacity .3s; }
+.badge.on .holo::before { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 2; clip-path: circle(32% at 50% 60.4%);
+  background: linear-gradient(115deg, transparent 40%, rgba(255, 255, 255, .85) 50%, transparent 60%) var(--mx) var(--my) / 300% 300% no-repeat; mix-blend-mode: soft-light; opacity: .6; transition: opacity .3s; }
+.badge.on::after { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: 0; transition: opacity .3s;
+  background: radial-gradient(240px 110px at var(--mx) var(--my), color-mix(in srgb, #ff7ad9 16%, transparent), color-mix(in srgb, #5fdcff 12%, transparent) 45%, transparent 75%); }
+.badge.on.holo-on .holo::after { opacity: .7; }
+.badge.on.holo-on .holo::before, .badge.on.holo-on::after { opacity: 1; }
+.badge.on.holo-on .holo { transform: rotate(calc(var(--hx) * 10deg)) scale(1.08); transition-duration: .12s; }
+@media (prefers-reduced-motion: no-preference) {
+  .badge.on:not(.holo-on) .holo::after, .badge.on:not(.holo-on) .holo::before { animation: holo-idle 7s ease-in-out infinite; }
+  @keyframes holo-idle { 0%, 100% { background-position: 10% 20%; } 50% { background-position: 90% 80%; } }
+}
+@media (prefers-reduced-motion: reduce) { .badge.on.holo-on .holo { transform: none; } }
 </style>
 <script>if (matchMedia("(display-mode: standalone)").matches || navigator.standalone) document.documentElement.classList.add("standalone");</script>
 <style>body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
@@ -3283,7 +3303,7 @@ function home() {
 
   <section class="section">
     <div class="section-head"><h2>Logros</h2><p>${plural(BADGES.filter(b => earned[b.id]).length, "conseguido", "conseguidos")} de ${BADGES.length}</p></div>
-    <div class="badges">${BADGES.map(b => { const on = !!earned[b.id], pr = !on && b.p ? b.p() : ""; return `<div class="badge ${on ? "on" : "off"}" title="${on ? "Conseguido el " + new Date(earned[b.id]).toLocaleDateString("es-ES") : "Pendiente"}">${badgeArt(b)}<div><b>${b.n}</b><small>${on ? "Conseguido" : b.d}${pr ? ` · ${pr}` : ""}</small></div></div>`; }).join("")}</div>
+    <div class="badges">${BADGES.map(b => { const on = !!earned[b.id], pr = !on && b.p ? b.p() : ""; return `<div class="badge ${on ? "on" : "off"}" title="${on ? "Conseguido el " + new Date(earned[b.id]).toLocaleDateString("es-ES") : "Pendiente"}"><span class="holo">${badgeArt(b)}</span><div><b>${b.n}</b><small>${on ? "Conseguido" : b.d}${pr ? ` · ${pr}` : ""}</small></div></div>`; }).join("")}</div>
   </section>
 
   </div>
@@ -5024,7 +5044,7 @@ function profileView() {
   <section class="section"><div class="section-head"><h2>Últimos exámenes</h2><p>${ex ? plural(ex, "examen", "exámenes") + " en total" : ""}</p></div>
     <div class="panel">${ex ? `<table><thead><tr><th>Fecha</th><th>Tipo</th><th>Aciertos</th><th>Tiempo</th><th>Resultado</th><th><span class="sr-only">Revisar</span></th></tr></thead><tbody>${history.slice(0, 10).map((h, i) => `<tr><td>${new Date(h.date).toLocaleString("es-ES", { dateStyle: "medium", timeStyle: "short" })}</td><td>${h.kind === "refuerzo" ? "Refuerzo" : h.kind === "real" ? "Realista" : "Simulado"}</td><td>${h.ok}/${h.n}</td><td>${h.secs ? fmt(h.secs * 1000) : "—"}</td><td><span class="pill ${h.pass ? "pill-ok" : "pill-bad"}">${h.pass ? "APTO" : "NO APTO"}</span></td><td>${oldBtn(h, i)}</td></tr>`).join("")}</tbody></table>` : emptyArt("examen", "Todavía no has hecho ningún examen.")}</div></section>
   <section class="section"><div class="section-head"><h2>Logros</h2><p>${got} de ${BADGES.length}</p></div>
-    <div class="badges">${BADGES.map(b => { const on = !!earned[b.id], pr = !on && b.p ? b.p() : ""; return `<div class="badge ${on ? "on" : "off"}">${badgeArt(b)}<div><b>${b.n}</b><small>${on ? "Conseguido el " + new Date(earned[b.id]).toLocaleDateString("es-ES") : b.d}${pr ? ` · ${pr}` : ""}</small></div></div>`; }).join("")}</div></section>
+    <div class="badges">${BADGES.map(b => { const on = !!earned[b.id], pr = !on && b.p ? b.p() : ""; return `<div class="badge ${on ? "on" : "off"}"><span class="holo">${badgeArt(b)}</span><div><b>${b.n}</b><small>${on ? "Conseguido el " + new Date(earned[b.id]).toLocaleDateString("es-ES") : b.d}${pr ? ` · ${pr}` : ""}</small></div></div>`; }).join("")}</div></section>
   ${name ? `<section class="section"><button class="link-danger" id="me-wipe">Borrar mis datos guardados en internet</button></section>` : ""}`;
   $("#me-set").onclick = openSettings;
   const o = $("#me-out"); if (o) o.onclick = () => logout();
@@ -5335,6 +5355,23 @@ if (matchMedia("(hover: hover) and (pointer: fine) and (prefers-reduced-motion: 
     el.style.setProperty("--mx", `${(x * 100).toFixed(1)}%`); el.style.setProperty("--my", `${(y * 100).toFixed(1)}%`);
   }, { passive: true });
   document.addEventListener("pointerleave", () => { if (tl) reset(tl); tl = null; });
+}
+// Logros holográficos: el reflejo sigue al dedo o al ratón
+{ let cur = null;
+  const off = () => { if (cur) { cur.classList.remove("holo-on"); cur.style.setProperty("--hx", 0); cur.style.setProperty("--hy", 0); cur = null; } };
+  const move = e => {
+    const b = e.target.closest && e.target.closest(".badge.on");
+    if (b !== cur) off();
+    if (!b) return;
+    const r = b.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+    cur = b; b.classList.add("holo-on");
+    b.style.setProperty("--mx", (x * 100).toFixed(1) + "%"); b.style.setProperty("--my", (y * 100).toFixed(1) + "%");
+    b.style.setProperty("--hx", (x - .5).toFixed(3)); b.style.setProperty("--hy", (y - .5).toFixed(3));
+  };
+  document.addEventListener("pointermove", move, { passive: true });
+  document.addEventListener("pointerdown", move, { passive: true });
+  for (const t of ["pointerup", "pointercancel"]) document.addEventListener(t, e => { if (e.pointerType !== "mouse") setTimeout(off, 600); }, { passive: true });
+  document.documentElement.addEventListener("pointerleave", off);
 }
 // Cabecera fina al bajar por la página
 { let raf = 0; const upd = () => { raf = 0; document.documentElement.classList.toggle("shrink", scrollY > 40); };
